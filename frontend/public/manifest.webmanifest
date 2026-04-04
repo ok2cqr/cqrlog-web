@@ -1,0 +1,25 @@
+{
+  "name": "CQRLOG Frontend",
+  "short_name": "CQRLOG",
+  "description": "Tablet-friendly frontend for CQRLOG QSO entry and lookup.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c121a",
+  "theme_color": "#1276e4",
+  "icons": [
+    {
+      "src": "/icons/cqrlog.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/cqrlog.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

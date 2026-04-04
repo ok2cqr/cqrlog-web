@@ -1,0 +1,51 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: symfony-app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      APP_DEBUG: ${APP_DEBUG:-1}
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-cqrlog002}
+      DB_USER: ${DB_USER:-cqrlog}
+      DB_PASSWORD: ${DB_PASSWORD:-cqrlog}
+      DB_CHARSET: ${DB_CHARSET:-utf8mb4}
+    ports:
+      - "4000:80"
+    volumes:
+      - .:/var/www/html
+    working_dir: /var/www/html
+    command: >
+      sh -c "if [ -f composer.json ] && [ ! -d vendor ]; then
+        composer install --no-interaction --prefer-dist;
+      fi && apache2-foreground"
+  db:
+    image: mariadb:11.4
+    container_name: con-db
+    environment:
+      MARIADB_DATABASE: ${DB_NAME:-cqrlog002}
+      MARIADB_USER: ${DB_USER:-cqrlog}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-cqrlog}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      DB_IMPORT_SOURCE: ${DB_IMPORT_SOURCE:-schema.sql}
+    ports:
+      - "${DB_EXTERNAL_PORT:-13306}:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./docker/mariadb/init/10-import-selected-dump.sh:/docker-entrypoint-initdb.d/10-import-selected-dump.sh:ro
+      - ./schema.sql:/docker-entrypoint-imports/schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -uroot -p$${MARIADB_ROOT_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+volumes:
+  db-data:

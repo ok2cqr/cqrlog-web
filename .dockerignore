@@ -1,0 +1,10 @@
+.git
+.gitignore
+.idea
+_old
+frontend/dist
+frontend/node_modules
+node_modules
+tests
+var
+vendor
