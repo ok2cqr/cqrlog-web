@@ -1885,15 +1885,6 @@ export default function App() {
           ≣
         </button>
         <button
-          className={isSettingsView ? 'sidebar__menu sidebar__button--active' : 'sidebar__menu'}
-          type="button"
-          aria-label="Settings"
-          title="Settings"
-          onClick={openSettingsView}
-        >
-          ⚙
-        </button>
-        <button
           className={isClusterView ? 'sidebar__menu sidebar__button--active' : 'sidebar__menu'}
           type="button"
           aria-label="DX Cluster"
@@ -1907,6 +1898,15 @@ export default function App() {
             <path d="M6.1 7.8c1.6.7 3.8 1.1 5.9 1.1s4.3-.4 5.9-1.1" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
             <path d="M6.1 16.2c1.6-.7 3.8-1.1 5.9-1.1s4.3.4 5.9 1.1" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
           </svg>
+        </button>
+        <button
+          className={isSettingsView ? 'sidebar__menu sidebar__button--active' : 'sidebar__menu'}
+          type="button"
+          aria-label="Settings"
+          title="Settings"
+          onClick={openSettingsView}
+        >
+          ⚙
         </button>
       </aside>
 
