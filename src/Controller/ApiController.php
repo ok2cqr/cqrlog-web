@@ -23,7 +23,7 @@ final class ApiController extends AbstractController
     {
         return $this->json([
             'status' => 'ok',
-            'environment' => $_ENV['APP_ENV'] ?? 'dev',
+            'environment' => $this->readEnvString('APP_ENV') ?? 'dev',
         ]);
     }
 
@@ -31,12 +31,40 @@ final class ApiController extends AbstractController
     public function frontendConfig(): JsonResponse
     {
         return $this->json([
-            'radioSyncDefaultUrl' => $_ENV['FRONTEND_RADIO_SYNC_DEFAULT_URL'] ?? 'https://example.com/radio-json.php',
+            'radioSyncDefaultUrl' => $this->readEnvString('FRONTEND_RADIO_SYNC_DEFAULT_URL') ?? 'https://example.com/radio-json.php',
             'radioSyncDefaultPollIntervalSeconds' => $this->normalizePositiveInt(
-                $_ENV['FRONTEND_RADIO_SYNC_DEFAULT_POLL_INTERVAL_SECONDS'] ?? null,
+                $this->readEnvValue('FRONTEND_RADIO_SYNC_DEFAULT_POLL_INTERVAL_SECONDS'),
                 2,
             ),
         ]);
+    }
+
+    private function readEnvString(string $name): ?string
+    {
+        $value = $this->readEnvValue($name);
+
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
+    }
+
+    private function readEnvValue(string $name): mixed
+    {
+        if (array_key_exists($name, $_SERVER)) {
+            return $_SERVER[$name];
+        }
+
+        if (array_key_exists($name, $_ENV)) {
+            return $_ENV[$name];
+        }
+
+        $value = getenv($name);
+
+        return $value === false ? null : $value;
     }
 
     private function normalizePositiveInt(mixed $value, int $fallback): int

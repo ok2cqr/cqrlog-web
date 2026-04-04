@@ -669,7 +669,7 @@ export default function App() {
   }
 
   const [settings, setSettings] = useState<FrontendSettings>(() => initialFrontendSettingsStateRef.current?.settings ?? DEFAULT_FRONTEND_SETTINGS);
-  const [radioSyncConfig, setRadioSyncConfig] = useState<RadioSyncConfig>(DEFAULT_RADIO_SYNC_CONFIG);
+  const [radioSyncConfig, setRadioSyncConfig] = useState<RadioSyncConfig | null>(null);
   const [radioSyncState, setRadioSyncState] = useState<RadioSyncState>('idle');
   const [form, setForm] = useState<FormState>(() => createInitialFormState());
   const [lookup, setLookup] = useState<LookupState>({
@@ -850,6 +850,10 @@ export default function App() {
         setRadioSyncConfig(nextConfig);
       })
       .catch((error) => {
+        if (!cancelled) {
+          setRadioSyncConfig(DEFAULT_RADIO_SYNC_CONFIG);
+        }
+
         console.error('Unable to load frontend config.', error);
       });
 
@@ -859,6 +863,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (radioSyncConfig === null) {
+      setRadioSyncState('idle');
+      return undefined;
+    }
+
     const radioUrl = radioSyncConfig.url.trim();
 
     if (radioUrl === '') {
@@ -911,7 +920,7 @@ export default function App() {
       cancelled = true;
       window.clearInterval(intervalId);
     };
-  }, [radioSyncConfig.pollIntervalSeconds, radioSyncConfig.url]);
+  }, [radioSyncConfig]);
 
   useEffect(() => {
     setForm((current) => ({
@@ -2973,7 +2982,9 @@ export default function App() {
                 <label className="setting-row setting-row--stacked">
                   <div className="setting-row__content">
                     <span className="setting-row__title">JSON URL</span>
-                    <p className="settings-profile-summary__line">{radioSyncConfig.url || 'Disabled'}</p>
+                    <p className="settings-profile-summary__line">
+                      {radioSyncConfig === null ? 'Loading…' : (radioSyncConfig.url || 'Disabled')}
+                    </p>
                     <p className="setting-row__description">
                       Configure this in <code>.env</code> via <code>FRONTEND_RADIO_SYNC_DEFAULT_URL</code>.
                     </p>
@@ -2983,7 +2994,9 @@ export default function App() {
                 <label className="setting-row setting-row--stacked">
                   <div className="setting-row__content">
                     <span className="setting-row__title">Refresh interval</span>
-                    <p className="settings-profile-summary__line">{radioSyncConfig.pollIntervalSeconds} s</p>
+                    <p className="settings-profile-summary__line">
+                      {radioSyncConfig === null ? 'Loading…' : `${radioSyncConfig.pollIntervalSeconds} s`}
+                    </p>
                     <p className="setting-row__description">
                       Configure this in <code>.env</code> via <code>FRONTEND_RADIO_SYNC_DEFAULT_POLL_INTERVAL_SECONDS</code>.
                     </p>

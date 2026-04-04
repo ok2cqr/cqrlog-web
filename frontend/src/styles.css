@@ -73,9 +73,9 @@ textarea {
 }
 
 .sidebar__accent {
-  background: linear-gradient(135deg, #ff6a00, #ff8d3a);
-  color: white;
-  box-shadow: 0 16px 30px rgba(255, 106, 0, 0.25);
+  background: white;
+  color: #ff6a00;
+  box-shadow: 0 10px 20px rgba(16, 32, 51, 0.08);
 }
 
 .sidebar__menu {
@@ -85,8 +85,9 @@ textarea {
 }
 
 .sidebar__button--active {
-  outline: 2px solid rgba(18, 118, 228, 0.22);
-  outline-offset: 2px;
+  background: linear-gradient(135deg, #ff6a00, #ff8d3a);
+  color: white;
+  box-shadow: 0 16px 30px rgba(255, 106, 0, 0.25);
 }
 
 .workspace {
@@ -942,6 +943,7 @@ textarea {
   border-right-color: rgba(139, 162, 188, 0.16);
 }
 
+:root[data-theme='dark'] .sidebar__accent,
 :root[data-theme='dark'] .sidebar__menu,
 :root[data-theme='dark'] .panel,
 :root[data-theme='dark'] .info-card,
@@ -958,9 +960,22 @@ textarea {
   color: #e7edf6;
 }
 
+:root[data-theme='dark'] .sidebar__accent,
 :root[data-theme='dark'] .sidebar__menu {
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
+}
+
+:root[data-theme='dark'] .sidebar__accent {
+  color: #ff9a52;
+}
+
+:root[data-theme='dark'] .sidebar__menu {
   color: #e7edf6;
+}
+
+:root[data-theme='dark'] .sidebar__button--active {
+  background: linear-gradient(135deg, #ff7a1a, #ff9a52);
+  color: white;
 }
 
 :root[data-theme='dark'] .club-pill {
