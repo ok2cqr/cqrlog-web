@@ -76,9 +76,11 @@ type DxccState = {
 
 type RadioSyncState = 'idle' | 'online' | 'offline';
 type ViewMode = 'entry' | 'list' | 'settings' | 'cluster';
+type ThemePreference = 'auto' | 'light' | 'dark';
+type ResolvedTheme = 'light' | 'dark';
 
 type FrontendSettings = {
-  theme: 'light' | 'dark';
+  theme: ThemePreference;
   defaultProfileId: number | null;
   showHiddenProfiles: boolean;
 };
@@ -201,7 +203,7 @@ const STORAGE_KEYS = {
 } as const;
 
 const DEFAULT_FRONTEND_SETTINGS: FrontendSettings = {
-  theme: 'light',
+  theme: 'auto',
   defaultProfileId: null,
   showHiddenProfiles: false,
 };
@@ -386,7 +388,9 @@ function readInitialFrontendSettingsState(): InitialFrontendSettingsState {
         : null;
     return {
       settings: {
-        theme: parsed.theme === 'dark' ? 'dark' : DEFAULT_FRONTEND_SETTINGS.theme,
+        theme: parsed.theme === 'dark' || parsed.theme === 'light' || parsed.theme === 'auto'
+          ? parsed.theme
+          : DEFAULT_FRONTEND_SETTINGS.theme,
         defaultProfileId: parsedProfileId,
         showHiddenProfiles:
           typeof parsed.showHiddenProfiles === 'boolean'
@@ -669,6 +673,13 @@ export default function App() {
   }
 
   const [settings, setSettings] = useState<FrontendSettings>(() => initialFrontendSettingsStateRef.current?.settings ?? DEFAULT_FRONTEND_SETTINGS);
+  const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(() => {
+    if (typeof window === 'undefined') {
+      return 'light';
+    }
+
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
   const [radioSyncConfig, setRadioSyncConfig] = useState<RadioSyncConfig | null>(null);
   const [radioSyncState, setRadioSyncState] = useState<RadioSyncState>('idle');
   const [form, setForm] = useState<FormState>(() => createInitialFormState());
@@ -931,12 +942,28 @@ export default function App() {
   }, [form.mode]);
 
   useEffect(() => {
-    document.documentElement.dataset.theme = settings.theme;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const updateTheme = (event?: MediaQueryList | MediaQueryListEvent) => {
+      setSystemTheme(event?.matches ?? mediaQuery.matches ? 'dark' : 'light');
+    };
+
+    updateTheme(mediaQuery);
+    mediaQuery.addEventListener('change', updateTheme);
+
+    return () => {
+      mediaQuery.removeEventListener('change', updateTheme);
+    };
+  }, []);
+
+  useEffect(() => {
+    const resolvedTheme = settings.theme === 'auto' ? systemTheme : settings.theme;
+
+    document.documentElement.dataset.theme = resolvedTheme;
 
     return () => {
       delete document.documentElement.dataset.theme;
     };
-  }, [settings.theme]);
+  }, [settings.theme, systemTheme]);
 
   useEffect(() => {
     let cancelled = false;
@@ -2864,14 +2891,15 @@ export default function App() {
 
                 <label className="setting-row">
                   <div>
-                    <span className="setting-row__title">Dark mode</span>
-                    <p className="setting-row__description">Switch the frontend between light and dark appearance.</p>
+                    <span className="setting-row__title">Theme</span>
+                    <p className="setting-row__description">Choose light, dark, or follow the system appearance automatically.</p>
                   </div>
                   <select
                     className="settings-select"
                     value={settings.theme}
-                    onChange={(event) => updateSetting('theme', event.target.value === 'dark' ? 'dark' : 'light')}
+                    onChange={(event) => updateSetting('theme', event.target.value as ThemePreference)}
                   >
+                    <option value="auto">Auto</option>
                     <option value="light">Light</option>
                     <option value="dark">Dark</option>
                   </select>
