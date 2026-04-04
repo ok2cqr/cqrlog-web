@@ -93,12 +93,17 @@ cp .env.prod.example .env.prod
 Fill in at least:
 
 - `PROD_APP_SECRET`
+- `PROD_APP_PORT`
 - `PROD_DEFAULT_URI`
 - `PROD_DB_HOST`
 - `PROD_DB_PORT`
 - `PROD_DB_NAME`
 - `PROD_DB_USER`
 - `PROD_DB_PASSWORD`
+
+`PROD_APP_PORT` is the host port published by Docker for the app container, for example `8080`.
+
+`PROD_DEFAULT_URI` should be the public base URL of the app, for example `https://log.example.com`. Symfony uses it as the default host and scheme when generating absolute URLs outside a normal HTTP request.
 
 The `PROD_DB_*` values should point to the same MariaDB database used by the desktop CQRLOG application.
 
