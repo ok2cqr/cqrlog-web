@@ -92,27 +92,27 @@ cp .env.prod.example .env.prod
 
 Fill in at least:
 
-- `PROD_APP_SECRET`
-- `PROD_APP_PORT`
-- `PROD_DEFAULT_URI`
-- `PROD_DB_HOST`
-- `PROD_DB_PORT`
-- `PROD_DB_NAME`
-- `PROD_DB_USER`
-- `PROD_DB_PASSWORD`
+- `APP_SECRET`
+- `APP_PORT`
+- `DEFAULT_URI`
+- `DB_HOST`
+- `DB_PORT`
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASSWORD`
 
-`PROD_APP_PORT` is the host port published by Docker for the app container, for example `8080`.
+`APP_PORT` is the host port published by Docker for the app container, for example `8080`.
 
-`PROD_DEFAULT_URI` should be the public base URL of the app, for example `https://log.example.com`. Symfony uses it as the default host and scheme when generating absolute URLs outside a normal HTTP request.
+`DEFAULT_URI` should be the public base URL of the app, for example `https://log.example.com`. Symfony uses it as the default host and scheme when generating absolute URLs outside a normal HTTP request.
 
-The `PROD_DB_*` values should point to the same MariaDB database used by the desktop CQRLOG application.
+The `DB_*` values should point to the same MariaDB database used by the desktop CQRLOG application.
 
 Optional:
 
-- `PROD_BASIC_AUTH_USERNAME`
-- `PROD_BASIC_AUTH_PASSWORD`
-- `PROD_FRONTEND_RADIO_SYNC_DEFAULT_URL`
-- `PROD_FRONTEND_RADIO_SYNC_DEFAULT_POLL_INTERVAL_SECONDS`
+- `BASIC_AUTH_USERNAME`
+- `BASIC_AUTH_PASSWORD`
+- `FRONTEND_RADIO_SYNC_DEFAULT_URL`
+- `FRONTEND_RADIO_SYNC_DEFAULT_POLL_INTERVAL_SECONDS`
 
 Radio sync expects a JSON API compatible with [ok2cqr/pico-radio-gateway](https://github.com/ok2cqr/pico-radio-gateway).
 

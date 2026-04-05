@@ -38,12 +38,12 @@ Important:
 
 2. Fill in at least:
 
-   - `PROD_APP_SECRET`
-   - `PROD_DEFAULT_URI`
-   - `PROD_DB_HOST`
-   - `PROD_DB_NAME`
-   - `PROD_DB_USER`
-   - `PROD_DB_PASSWORD`
+   - `APP_SECRET`
+   - `DEFAULT_URI`
+   - `DB_HOST`
+   - `DB_NAME`
+   - `DB_USER`
+   - `DB_PASSWORD`
 
 3. Build and start the production stack:
 
@@ -61,7 +61,7 @@ Important:
 
 ## Apache2 reverse proxy
 
-The app container listens on port `80` internally and on `${PROD_APP_PORT}` externally, default `8080`.
+The app container listens on port `80` internally and on `${APP_PORT}` externally, default `8080`.
 
 Typical production setup:
 
@@ -84,7 +84,7 @@ Recommended production shape:
 Optional fallback:
 
 - the app container can also provide its own Basic Auth
-- it is enabled only when both `PROD_BASIC_AUTH_USERNAME` and `PROD_BASIC_AUTH_PASSWORD` are set
+- it is enabled only when both `BASIC_AUTH_USERNAME` and `BASIC_AUTH_PASSWORD` are set
 - `/assets/*`, `/icons/*`, `/sw.js`, and `/manifest.webmanifest` stay public to avoid slowing down frontend asset loading
 
 This is intentionally minimal and suitable mainly for a private or small-team deployment.

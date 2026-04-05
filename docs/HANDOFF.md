@@ -179,9 +179,7 @@ Additional frontend work completed after initial handoff:
 - current backend env vars for this are:
   - `FRONTEND_RADIO_SYNC_DEFAULT_URL`
   - `FRONTEND_RADIO_SYNC_DEFAULT_POLL_INTERVAL_SECONDS`
-- production compose maps these from:
-  - `PROD_FRONTEND_RADIO_SYNC_DEFAULT_URL`
-  - `PROD_FRONTEND_RADIO_SYNC_DEFAULT_POLL_INTERVAL_SECONDS`
+- production now uses the same variable names in `.env.prod`
 - frontend can poll an external radio JSON endpoint and map returned values into the entry form:
   - `freq` is expected in `kHz` and is converted to `MHz`
   - if converted `freq > 0`, it updates `Freq`

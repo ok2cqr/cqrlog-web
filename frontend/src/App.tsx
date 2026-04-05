@@ -3014,7 +3014,7 @@ export default function App() {
                       {radioSyncConfig === null ? 'Loading…' : (radioSyncConfig.url || 'Disabled')}
                     </p>
                     <p className="setting-row__description">
-                      Configure this in <code>.env</code> via <code>FRONTEND_RADIO_SYNC_DEFAULT_URL</code>.
+                      Configure this in <code>.env.local</code> or <code>.env</code> for local development, or in <code>.env.prod</code> for Docker production.
                     </p>
                   </div>
                 </label>
@@ -3026,7 +3026,7 @@ export default function App() {
                       {radioSyncConfig === null ? 'Loading…' : `${radioSyncConfig.pollIntervalSeconds} s`}
                     </p>
                     <p className="setting-row__description">
-                      Configure this in <code>.env</code> via <code>FRONTEND_RADIO_SYNC_DEFAULT_POLL_INTERVAL_SECONDS</code>.
+                      Configure this in <code>.env.local</code> or <code>.env</code> for local development, or in <code>.env.prod</code> for Docker production.
                     </p>
                   </div>
                 </label>
