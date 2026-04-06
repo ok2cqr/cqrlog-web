@@ -1,5 +1,5 @@
 import { useDeferredValue, useEffect, useRef, useState } from 'react';
-import type { Dispatch, SetStateAction } from 'react';
+import type { Dispatch, KeyboardEvent as ReactKeyboardEvent, SetStateAction } from 'react';
 import {
   createProfile,
   createLogEntry,
@@ -89,6 +89,27 @@ type RadioSyncConfig = {
   url: string;
   pollIntervalSeconds: number;
 };
+
+type EntryArrowElement = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+
+type EntryArrowField =
+  | 'callsign'
+  | 'rstReceived'
+  | 'rstSent'
+  | 'name'
+  | 'qth'
+  | 'grid'
+  | 'state'
+  | 'county'
+  | 'award'
+  | 'remarks'
+  | 'qslVia'
+  | 'callsignNote'
+  | 'waz'
+  | 'itu'
+  | 'iota'
+  | 'qslSent'
+  | 'qslReceived';
 
 type ProfileState = {
   status: 'idle' | 'loading' | 'ready' | 'error';
@@ -216,6 +237,25 @@ const DEFAULT_RADIO_SYNC_CONFIG: RadioSyncConfig = {
   url: 'https://example.com/radio-json.php',
   pollIntervalSeconds: 2,
 };
+const ENTRY_ARROW_NAV_ORDER: EntryArrowField[] = [
+  'callsign',
+  'rstReceived',
+  'rstSent',
+  'name',
+  'qth',
+  'grid',
+  'state',
+  'county',
+  'award',
+  'remarks',
+  'qslVia',
+  'callsignNote',
+  'waz',
+  'itu',
+  'iota',
+  'qslSent',
+  'qslReceived',
+];
 const DX_CLUSTER_URL = 'https://www.hamqth.com/dxc_csv.php?limit=10';
 const DX_CLUSTER_POLL_INTERVAL_MS = 20_000;
 const defaultFrequencyByBand: Record<string, string> = {
@@ -413,6 +453,25 @@ function normalizeCzechNumberRow(value: string): string {
 
 function normalizeDigitsOnly(value: string): string {
   return normalizeCzechNumberRow(value).replace(/\D+/g, '');
+}
+
+function uppercaseFirstCharacter(value: string): string {
+  if (value === '') {
+    return value;
+  }
+
+  return value.charAt(0).toLocaleUpperCase() + value.slice(1);
+}
+
+function selectRstEditableCharacter(input: HTMLInputElement): void {
+  const valueLength = input.value.length;
+
+  if (valueLength <= 0) {
+    return;
+  }
+
+  const selectionIndex = valueLength >= 2 ? 1 : 0;
+  input.setSelectionRange(selectionIndex, Math.min(selectionIndex + 1, valueLength));
 }
 
 function getBandFromFrequency(value: string): string | null {
@@ -666,6 +725,7 @@ function parseSolarDataSummary(responseText: string): string {
 }
 
 export default function App() {
+  const DOUBLE_ESCAPE_CLEAR_WINDOW_MS = 500;
   const initialFrontendSettingsStateRef = useRef<InitialFrontendSettingsState | null>(null);
 
   if (initialFrontendSettingsStateRef.current === null) {
@@ -757,6 +817,8 @@ export default function App() {
   const [lookupCallsign, setLookupCallsign] = useState('');
   const deferredLookupCallsign = useDeferredValue(lookupCallsign);
   const callsignInputRef = useRef<HTMLInputElement | null>(null);
+  const entryArrowFieldRefs = useRef<Partial<Record<EntryArrowField, EntryArrowElement | null>>>({});
+  const lastEscapeAtRef = useRef(0);
   const lookupKeyRef = useRef<string>('');
   const dxccLookupKeyRef = useRef<string>('');
   const editDxccLookupKeyRef = useRef<string>('');
@@ -783,6 +845,35 @@ export default function App() {
 
     return () => window.clearTimeout(timeoutId);
   }, [viewMode]);
+
+  useEffect(() => {
+    if (viewMode !== 'entry' || profileDialog.status !== 'closed' || editDialog.status !== 'closed') {
+      return undefined;
+    }
+
+    const handleWindowKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.repeat) {
+        return;
+      }
+
+      const now = Date.now();
+
+      if (now - lastEscapeAtRef.current <= DOUBLE_ESCAPE_CLEAR_WINDOW_MS) {
+        lastEscapeAtRef.current = 0;
+        event.preventDefault();
+        resetEntryForm();
+        return;
+      }
+
+      lastEscapeAtRef.current = now;
+    };
+
+    window.addEventListener('keydown', handleWindowKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleWindowKeyDown);
+    };
+  }, [editDialog.status, profileDialog.status, viewMode]);
 
   useEffect(() => {
     if (form.offline) {
@@ -1415,6 +1506,13 @@ export default function App() {
     }));
   }
 
+  function normalizeEntryFieldCapitalization(field: 'name' | 'qth'): void {
+    setForm((current) => ({
+      ...current,
+      [field]: uppercaseFirstCharacter(current[field]),
+    }));
+  }
+
   function openEntryView(): void {
     setViewMode('entry');
   }
@@ -1436,6 +1534,81 @@ export default function App() {
       ...current,
       [key]: value,
     }));
+  }
+
+  function setEntryArrowFieldRef(
+    field: EntryArrowField,
+    element: EntryArrowElement | null,
+  ): void {
+    entryArrowFieldRefs.current[field] = element;
+  }
+
+  function focusEntryArrowField(field: EntryArrowField, element: EntryArrowElement): void {
+    element.focus();
+
+    if (element instanceof HTMLInputElement) {
+      if (field === 'rstReceived' || field === 'rstSent') {
+        selectRstEditableCharacter(element);
+        return;
+      }
+
+      element.select();
+    }
+  }
+
+  function handleEntryArrowNavigation(
+    field: EntryArrowField,
+  ): (event: ReactKeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => void {
+    return (event) => {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+        return;
+      }
+
+      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') {
+        return;
+      }
+
+      const currentIndex = ENTRY_ARROW_NAV_ORDER.indexOf(field);
+
+      if (currentIndex === -1) {
+        return;
+      }
+
+      const nextIndex = event.key === 'ArrowDown' ? currentIndex + 1 : currentIndex - 1;
+
+      if (nextIndex < 0 || nextIndex >= ENTRY_ARROW_NAV_ORDER.length) {
+        return;
+      }
+
+      const nextField = ENTRY_ARROW_NAV_ORDER[nextIndex];
+      const nextElement = entryArrowFieldRefs.current[nextField];
+
+      if (!nextElement) {
+        return;
+      }
+
+      event.preventDefault();
+      window.requestAnimationFrame(() => {
+        focusEntryArrowField(nextField, nextElement);
+      });
+    };
+  }
+
+  function handleCallsignKeyDown(event: ReactKeyboardEvent<HTMLInputElement>): void {
+    if (event.key === ' ') {
+      event.preventDefault();
+      const nextElement = entryArrowFieldRefs.current.rstReceived;
+
+      if (nextElement) {
+        window.requestAnimationFrame(() => {
+          focusEntryArrowField('rstReceived', nextElement);
+        });
+      }
+
+      return;
+    }
+
+    handleEntryArrowNavigation('callsign')(event);
   }
 
   function resetFrontendSettings(): void {
@@ -1664,6 +1837,22 @@ export default function App() {
         form: {
           ...current.form,
           [field]: value,
+        },
+      };
+    });
+  }
+
+  function normalizeEditFieldCapitalization(field: 'name' | 'qth'): void {
+    setEditDialog((current) => {
+      if (current.form === null) {
+        return current;
+      }
+
+      return {
+        ...current,
+        form: {
+          ...current.form,
+          [field]: uppercaseFirstCharacter(current.form[field]),
         },
       };
     });
@@ -2059,7 +2248,10 @@ export default function App() {
                     {currentQsoNumber !== null ? <span className="field__meta">(QSO nr. {currentQsoNumber})</span> : null}
                   </span>
                   <input
-                    ref={callsignInputRef}
+                    ref={(element) => {
+                      callsignInputRef.current = element;
+                      setEntryArrowFieldRef('callsign', element);
+                    }}
                     value={form.callsign}
                     onChange={(event) => {
                       const nextCallsign = normalizeCzechNumberRow(event.target.value).toUpperCase();
@@ -2082,6 +2274,7 @@ export default function App() {
                       applyClubMemberships(setForm, []);
                     }}
                     onBlur={() => setLookupCallsign(normalizedCallsign)}
+                    onKeyDown={handleCallsignKeyDown}
                     required
                   />
                 </label>
@@ -2089,9 +2282,12 @@ export default function App() {
                 <label className="field field--rst">
                   <span>His RST</span>
                   <input
+                    ref={(element) => setEntryArrowFieldRef('rstReceived', element)}
                     value={form.rstReceived}
                     onChange={(event) => updateField('rstReceived', normalizeCzechNumberRow(event.target.value))}
+                    onFocus={(event) => selectRstEditableCharacter(event.currentTarget)}
                     maxLength={5}
+                    onKeyDown={handleEntryArrowNavigation('rstReceived')}
                     onBlur={() => {
                       if (form.callsign.trim() === '' || qsoStarted) {
                         return;
@@ -2106,17 +2302,23 @@ export default function App() {
                 <label className="field field--rst">
                   <span>My RST</span>
                   <input
+                    ref={(element) => setEntryArrowFieldRef('rstSent', element)}
                     value={form.rstSent}
                     onChange={(event) => updateField('rstSent', normalizeCzechNumberRow(event.target.value))}
+                    onFocus={(event) => selectRstEditableCharacter(event.currentTarget)}
                     maxLength={5}
+                    onKeyDown={handleEntryArrowNavigation('rstSent')}
                   />
                 </label>
 
                 <label className="field field--wide field--callsign-name">
                   <span>Name</span>
                   <input
+                    ref={(element) => setEntryArrowFieldRef('name', element)}
                     value={form.name}
                     onChange={(event) => updateField('name', event.target.value)}
+                    onBlur={() => normalizeEntryFieldCapitalization('name')}
+                    onKeyDown={handleEntryArrowNavigation('name')}
                     autoComplete="off"
                     data-1p-ignore="true"
                     data-lpignore="true"
@@ -2127,44 +2329,77 @@ export default function App() {
               <section className="grid grid--geo">
                 <label className="field field--wide">
                   <span>QTH</span>
-                  <input value={form.qth} onChange={(event) => updateField('qth', event.target.value)} />
+                  <input
+                    ref={(element) => setEntryArrowFieldRef('qth', element)}
+                    value={form.qth}
+                    onChange={(event) => updateField('qth', event.target.value)}
+                    onBlur={() => normalizeEntryFieldCapitalization('qth')}
+                    onKeyDown={handleEntryArrowNavigation('qth')}
+                  />
                 </label>
 
                 <label className="field">
                   <span>Grid</span>
                   <input
+                    ref={(element) => setEntryArrowFieldRef('grid', element)}
                     value={form.grid}
                     onChange={(event) => updateField('grid', normalizeCzechNumberRow(event.target.value).toUpperCase())}
+                    onKeyDown={handleEntryArrowNavigation('grid')}
                   />
                 </label>
 
                 <label className="field">
                   <span>State</span>
-                  <input value={form.state} onChange={(event) => updateField('state', event.target.value.toUpperCase())} />
+                  <input
+                    ref={(element) => setEntryArrowFieldRef('state', element)}
+                    value={form.state}
+                    onChange={(event) => updateField('state', event.target.value.toUpperCase())}
+                    autoComplete="off"
+                    data-1p-ignore="true"
+                    data-lpignore="true"
+                    onKeyDown={handleEntryArrowNavigation('state')}
+                  />
                 </label>
 
                 <label className="field field--wide">
                   <span>County</span>
-                  <input value={form.county} onChange={(event) => updateField('county', event.target.value)} />
+                  <input
+                    ref={(element) => setEntryArrowFieldRef('county', element)}
+                    value={form.county}
+                    onChange={(event) => updateField('county', event.target.value)}
+                    onKeyDown={handleEntryArrowNavigation('county')}
+                  />
                 </label>
               </section>
 
               <section className="grid grid--mid">
                 <label className="field">
                   <span>Award</span>
-                  <input value={form.award} onChange={(event) => updateField('award', event.target.value)} />
+                  <input
+                    ref={(element) => setEntryArrowFieldRef('award', element)}
+                    value={form.award}
+                    onChange={(event) => updateField('award', event.target.value)}
+                    onKeyDown={handleEntryArrowNavigation('award')}
+                  />
                 </label>
 
                 <label className="field field--wide">
                   <span>Comment to QSO</span>
-                  <input value={form.remarks} onChange={(event) => updateField('remarks', event.target.value)} />
+                  <input
+                    ref={(element) => setEntryArrowFieldRef('remarks', element)}
+                    value={form.remarks}
+                    onChange={(event) => updateField('remarks', event.target.value)}
+                    onKeyDown={handleEntryArrowNavigation('remarks')}
+                  />
                 </label>
 
                 <label className="field">
                   <span>QSL Via</span>
                   <input
+                    ref={(element) => setEntryArrowFieldRef('qslVia', element)}
                     value={form.qslVia}
                     onChange={(event) => updateField('qslVia', normalizeCzechNumberRow(event.target.value).toUpperCase())}
+                    onKeyDown={handleEntryArrowNavigation('qslVia')}
                   />
                 </label>
               </section>
@@ -2172,6 +2407,7 @@ export default function App() {
               <label className="field field--textarea">
                 <span>Comment to callsign</span>
                 <textarea
+                  ref={(element) => setEntryArrowFieldRef('callsignNote', element)}
                   value={form.callsignNote}
                   onChange={(event) => {
                     updateField('callsignNote', event.target.value);
@@ -2185,32 +2421,42 @@ export default function App() {
                 <label className="field">
                   <span>WAZ</span>
                   <input
+                    ref={(element) => setEntryArrowFieldRef('waz', element)}
                     value={form.waz}
                     onChange={(event) => updateField('waz', normalizeCzechNumberRow(event.target.value))}
                     inputMode="numeric"
+                    onKeyDown={handleEntryArrowNavigation('waz')}
                   />
                 </label>
 
                 <label className="field">
                   <span>ITU</span>
                   <input
+                    ref={(element) => setEntryArrowFieldRef('itu', element)}
                     value={form.itu}
                     onChange={(event) => updateField('itu', normalizeCzechNumberRow(event.target.value))}
                     inputMode="numeric"
+                    onKeyDown={handleEntryArrowNavigation('itu')}
                   />
                 </label>
 
                 <label className="field">
                   <span>IOTA</span>
                   <input
+                    ref={(element) => setEntryArrowFieldRef('iota', element)}
                     value={form.iota}
                     onChange={(event) => updateField('iota', normalizeCzechNumberRow(event.target.value).toUpperCase())}
+                    onKeyDown={handleEntryArrowNavigation('iota')}
                   />
                 </label>
 
                 <label className="field field--compact">
                   <span>QS</span>
-                  <select value={form.qslSent} onChange={(event) => updateField('qslSent', event.target.value)}>
+                  <select
+                    ref={(element) => setEntryArrowFieldRef('qslSent', element)}
+                    value={form.qslSent}
+                    onChange={(event) => updateField('qslSent', event.target.value)}
+                  >
                     {qslOptions.map((option) => (
                       <option key={option} value={option}>
                         {option || '-'}
@@ -2221,7 +2467,11 @@ export default function App() {
 
                 <label className="field field--compact">
                   <span>QR</span>
-                  <select value={form.qslReceived} onChange={(event) => updateField('qslReceived', event.target.value)}>
+                  <select
+                    ref={(element) => setEntryArrowFieldRef('qslReceived', element)}
+                    value={form.qslReceived}
+                    onChange={(event) => updateField('qslReceived', event.target.value)}
+                  >
                     {qslOptions.map((option) => (
                       <option key={option} value={option}>
                         {option || '-'}
@@ -2621,6 +2871,7 @@ export default function App() {
                           <input
                             value={editDialog.form.name}
                             onChange={(event) => updateEditField('name', event.target.value)}
+                            onBlur={() => normalizeEditFieldCapitalization('name')}
                             autoComplete="off"
                             data-1p-ignore="true"
                             data-lpignore="true"
@@ -2631,7 +2882,11 @@ export default function App() {
                       <section className="grid grid--geo">
                         <label className="field field--wide">
                           <span>QTH</span>
-                          <input value={editDialog.form.qth} onChange={(event) => updateEditField('qth', event.target.value)} />
+                          <input
+                            value={editDialog.form.qth}
+                            onChange={(event) => updateEditField('qth', event.target.value)}
+                            onBlur={() => normalizeEditFieldCapitalization('qth')}
+                          />
                         </label>
 
                         <label className="field">
