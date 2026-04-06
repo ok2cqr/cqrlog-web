@@ -131,7 +131,7 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
 Useful production commands:
 
 ```bash
-make deploy
+make prod
 make prod-logs
 make prod-down
 make prod-config

@@ -6,7 +6,7 @@ DEV_COMPOSE_FILE := docker-compose.yml
 PROD_COMPOSE_FILE := docker-compose.prod.yml
 PROD_ENV_FILE := .env.prod
 
-.PHONY: help dev dev-down dev-logs prod prod-down prod-logs prod-build prod-config deploy test test-backend test-db-reset check-prod-env
+.PHONY: help dev dev-down dev-logs prod prod-down prod-logs prod-config test test-backend test-db-reset check-prod-env
 
 help:
 	@printf '%s\n' \
@@ -15,10 +15,8 @@ help:
 		'make dev-logs   Tail development logs' \
 		'make test       Reset the local test database and run backend tests' \
 		'make prod       Build and start the production stack' \
-		'make deploy     Alias for make prod' \
 		'make prod-down  Stop the production stack' \
 		'make prod-logs  Tail production logs' \
-		'make prod-build Build the production image without starting it' \
 		'make prod-config Render the production Compose config'
 
 dev:
@@ -44,16 +42,11 @@ test-db-reset:
 prod: check-prod-env
 	$(COMPOSE) --env-file $(PROD_ENV_FILE) -f $(PROD_COMPOSE_FILE) up -d --build
 
-deploy: prod
-
 prod-down: check-prod-env
 	$(COMPOSE) --env-file $(PROD_ENV_FILE) -f $(PROD_COMPOSE_FILE) down
 
 prod-logs: check-prod-env
 	$(COMPOSE) --env-file $(PROD_ENV_FILE) -f $(PROD_COMPOSE_FILE) logs -f --tail=100
-
-prod-build: check-prod-env
-	$(COMPOSE) --env-file $(PROD_ENV_FILE) -f $(PROD_COMPOSE_FILE) build
 
 prod-config: check-prod-env
 	$(COMPOSE) --env-file $(PROD_ENV_FILE) -f $(PROD_COMPOSE_FILE) config
