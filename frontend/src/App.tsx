@@ -455,6 +455,10 @@ function normalizeDigitsOnly(value: string): string {
   return normalizeCzechNumberRow(value).replace(/\D+/g, '');
 }
 
+function normalizeCallsignInput(value: string): string {
+  return normalizeCzechNumberRow(value).replace(/\./g, '/').toUpperCase();
+}
+
 function uppercaseFirstCharacter(value: string): string {
   if (value === '') {
     return value;
@@ -2254,7 +2258,7 @@ export default function App() {
                     }}
                     value={form.callsign}
                     onChange={(event) => {
-                      const nextCallsign = normalizeCzechNumberRow(event.target.value).toUpperCase();
+                      const nextCallsign = normalizeCallsignInput(event.target.value);
 
                       setForm((current) => ({
                         ...current,
@@ -2820,7 +2824,7 @@ export default function App() {
                           <input
                             value={editDialog.form.callsign}
                             onChange={(event) => {
-                              const nextCallsign = normalizeCzechNumberRow(event.target.value).toUpperCase();
+                              const nextCallsign = normalizeCallsignInput(event.target.value);
 
                               setEditDialog((current) => {
                                 if (current.form === null) {
