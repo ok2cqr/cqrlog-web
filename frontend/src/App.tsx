@@ -5,6 +5,7 @@ import {
   createLogEntry,
   createNote,
   deleteProfile,
+  getAuthStatus,
   getCallsignContext,
   getDxClusterFeed,
   getDxcc,
@@ -14,6 +15,9 @@ import {
   getProfiles,
   getRadioState,
   getSolarData,
+  login,
+  logout,
+  setOnUnauthorized,
   updateProfile,
   updateLogEntry,
   updateNote,
@@ -729,6 +733,47 @@ function parseSolarDataSummary(responseText: string): string {
 }
 
 export default function App() {
+  const [authState, setAuthState] = useState<'checking' | 'logged-in' | 'logged-out'>('checking');
+  const [authRequired, setAuthRequired] = useState(true);
+  const [loginError, setLoginError] = useState('');
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+
+  useEffect(() => {
+    getAuthStatus()
+      .then((res) => {
+        setAuthState(res.authenticated ? 'logged-in' : 'logged-out');
+        setAuthRequired(res.authRequired);
+      })
+      .catch(() => setAuthState('logged-out'));
+  }, []);
+
+  useEffect(() => {
+    setOnUnauthorized(() => setAuthState('logged-out'));
+    return () => setOnUnauthorized(null);
+  }, []);
+
+  async function handleLogin(event: React.FormEvent): Promise<void> {
+    event.preventDefault();
+    setLoginError('');
+    try {
+      const result = await login(loginForm.username, loginForm.password);
+      if (result.authenticated) {
+        setAuthState('logged-in');
+        setLoginForm({ username: '', password: '' });
+      }
+    } catch (err) {
+      setLoginError(err instanceof Error ? err.message : 'Login failed.');
+    }
+  }
+
+  async function handleLogout(): Promise<void> {
+    try {
+      await logout();
+    } finally {
+      setAuthState('logged-out');
+    }
+  }
+
   const DOUBLE_ESCAPE_CLEAR_WINDOW_MS = 500;
   const initialFrontendSettingsStateRef = useRef<InitialFrontendSettingsState | null>(null);
 
@@ -2083,6 +2128,45 @@ export default function App() {
   const canGoToNextQsoPage = qsoList.page < qsoList.totalPages;
   const currentQsoNumber = lookup.status === 'ready' && lookupCallsign !== '' ? recentQsoCount + 1 : null;
 
+  if (authState === 'checking') {
+    return (
+      <div className="login-screen">
+        <p className="login-loading">Loading…</p>
+      </div>
+    );
+  }
+
+  if (authState === 'logged-out') {
+    return (
+      <div className="login-screen">
+        <form className="login-form" onSubmit={handleLogin}>
+          <h1 className="login-title">CQRLOG Web</h1>
+          {loginError && <p className="login-error">{loginError}</p>}
+          <label className="field">
+            <span>Username</span>
+            <input
+              type="text"
+              value={loginForm.username}
+              onChange={(e) => setLoginForm((prev) => ({ ...prev, username: e.target.value }))}
+              autoFocus
+              autoComplete="username"
+            />
+          </label>
+          <label className="field">
+            <span>Password</span>
+            <input
+              type="password"
+              value={loginForm.password}
+              onChange={(e) => setLoginForm((prev) => ({ ...prev, password: e.target.value }))}
+              autoComplete="current-password"
+            />
+          </label>
+          <button className="button button--primary" type="submit">Log in</button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div className="shell">
       <aside className="sidebar">
@@ -2128,6 +2212,24 @@ export default function App() {
         >
           ⚙
         </button>
+        {authRequired ? (
+          <>
+            <div className="sidebar__spacer" />
+            <button
+              className="sidebar__menu sidebar__logout"
+              type="button"
+              aria-label="Log out"
+              title="Log out"
+              onClick={handleLogout}
+            >
+              <svg className="sidebar__icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <polyline points="16 17 21 12 16 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <line x1="21" y1="12" x2="9" y2="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </>
+        ) : null}
       </aside>
 
       <main className="workspace">

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Api;
 
+use App\Tests\Support\AuthenticatesClient;
 use App\Tests\Support\UsesTestDatabase;
 use DateTimeImmutable;
 use Dibi\Connection;
@@ -14,6 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class CallsignContextControllerTest extends WebTestCase
 {
+    use AuthenticatesClient;
     use UsesTestDatabase;
 
     private KernelBrowser $client;
@@ -23,6 +25,7 @@ final class CallsignContextControllerTest extends WebTestCase
     {
         self::ensureKernelShutdown();
         $this->client = static::createClient();
+        $this->authenticateClient($this->client);
 
         /** @var Connection $connection */
         $connection = static::getContainer()->get(Connection::class);

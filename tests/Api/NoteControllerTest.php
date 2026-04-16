@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Api;
 
+use App\Tests\Support\AuthenticatesClient;
 use App\Tests\Support\UsesTestDatabase;
 use Dibi\Connection;
 use PHPUnit\Framework\Attributes\Test;
@@ -13,6 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class NoteControllerTest extends WebTestCase
 {
+    use AuthenticatesClient;
     use UsesTestDatabase;
 
     private KernelBrowser $client;
@@ -22,6 +24,7 @@ final class NoteControllerTest extends WebTestCase
     {
         self::ensureKernelShutdown();
         $this->client = static::createClient();
+        $this->authenticateClient($this->client);
 
         /** @var Connection $connection */
         $connection = static::getContainer()->get(Connection::class);

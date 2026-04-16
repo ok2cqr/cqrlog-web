@@ -20,6 +20,8 @@
         <env name="DB_USER" value="cqrlog" force="true" />
         <env name="DB_PASSWORD" value="cqrlog" force="true" />
         <env name="DB_CHARSET" value="utf8mb4" force="true" />
+        <env name="LOGIN_USERNAME" value="testuser" force="true" />
+        <env name="LOGIN_PASSWORD" value="testpass" force="true" />
         <server name="KERNEL_CLASS" value="App\Kernel" />
         <server name="SHELL_VERBOSITY" value="-1" />
     </php>

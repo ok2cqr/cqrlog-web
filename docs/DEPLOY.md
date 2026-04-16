@@ -40,6 +40,8 @@ Important:
 
    - `APP_SECRET`
    - `DEFAULT_URI`
+   - `LOGIN_USERNAME`
+   - `LOGIN_PASSWORD`
    - `DB_HOST`
    - `DB_NAME`
    - `DB_USER`
@@ -81,11 +83,12 @@ Recommended production shape:
 - keep the app container itself without Basic Auth
 - `/api/health` stays public for simple health checks
 
-Optional fallback:
+Optional:
 
-- the app container can also provide its own Basic Auth
-- it is enabled only when both `BASIC_AUTH_USERNAME` and `BASIC_AUTH_PASSWORD` are set
-- `/assets/*`, `/icons/*`, `/sw.js`, and `/manifest.webmanifest` stay public to avoid slowing down frontend asset loading
+- the app has a built-in login form
+- it is enabled only when both `LOGIN_USERNAME` and `LOGIN_PASSWORD` are set
+- when enabled, all API endpoints (except `/api/health`) require a valid session
+- sessions are created via the login form at the application level
 
 This is intentionally minimal and suitable mainly for a private or small-team deployment.
 

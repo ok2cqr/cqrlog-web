@@ -29,6 +29,17 @@ export type FrontendConfigResponse = {
   radioSyncDefaultPollIntervalSeconds?: number | null;
 };
 
+export type AuthStatusResponse = {
+  authenticated: boolean;
+  authRequired: boolean;
+};
+
+let onUnauthorized: (() => void) | null = null;
+
+export function setOnUnauthorized(callback: (() => void) | null): void {
+  onUnauthorized = callback;
+}
+
 async function requestJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
     headers: {
@@ -39,6 +50,11 @@ async function requestJson<T>(input: RequestInfo, init?: RequestInit): Promise<T
   });
 
   if (!response.ok) {
+    if (response.status === 401 && onUnauthorized) {
+      onUnauthorized();
+      throw new Error('Session expired. Please log in again.');
+    }
+
     let payload: ApiErrorPayload | null = null;
 
     try {
@@ -69,6 +85,23 @@ async function requestJson<T>(input: RequestInfo, init?: RequestInit): Promise<T
   }
 
   return JSON.parse(responseText) as T;
+}
+
+export function getAuthStatus(): Promise<AuthStatusResponse> {
+  return requestJson<AuthStatusResponse>('/api/auth/status');
+}
+
+export function login(username: string, password: string): Promise<AuthStatusResponse> {
+  return requestJson<AuthStatusResponse>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  });
+}
+
+export function logout(): Promise<AuthStatusResponse> {
+  return requestJson<AuthStatusResponse>('/api/auth/logout', {
+    method: 'POST',
+  });
 }
 
 export function getCallsignContext(callsign: string, qsoDate?: string): Promise<CallsignContext> {

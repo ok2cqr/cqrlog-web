@@ -1,6 +1,9 @@
 # CQRLOG Web
 
-Symfony backend and React frontend for a CQRLOG-style web UI. The backend preserves and normalizes some legacy field names used by the original desktop application. A few of those names are more than 20 years old and are somewhat obsolete today, but they are kept for compatibility with the existing data model. Most of the code was created with help from OpenAI Codex.
+Symfony backend and React frontend for a CQRLOG-style web UI. The backend preserves and normalizes some legacy field 
+names used by the original desktop application. A few of those names are more than 20 years old and are somewhat obsolete 
+today, but they are kept for compatibility with the existing data model. Most of the code was created with help from 
+OpenAI Codex and Claude.
 
 ## Stack
 
@@ -95,6 +98,8 @@ Fill in at least:
 - `APP_SECRET`
 - `APP_PORT`
 - `DEFAULT_URI`
+- `LOGIN_USERNAME`
+- `LOGIN_PASSWORD`
 - `DB_HOST`
 - `DB_PORT`
 - `DB_NAME`
@@ -109,8 +114,6 @@ The `DB_*` values should point to the same MariaDB database used by the desktop 
 
 Optional:
 
-- `BASIC_AUTH_USERNAME`
-- `BASIC_AUTH_PASSWORD`
 - `FRONTEND_RADIO_SYNC_DEFAULT_URL`
 - `FRONTEND_RADIO_SYNC_DEFAULT_POLL_INTERVAL_SECONDS`
 

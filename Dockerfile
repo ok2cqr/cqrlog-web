@@ -31,7 +31,6 @@ ENV APP_ENV=prod \
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        apache2-utils \
         libicu-dev \
         libzip-dev \
         libpq-dev \
@@ -49,7 +48,6 @@ RUN apt-get update \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 COPY docker/apache/servername.conf /etc/apache2/conf-available/servername.conf
-COPY docker/apache/basic-auth.conf /etc/apache2/conf-available/basic-auth.conf
 COPY docker/auth-entrypoint.sh /usr/local/bin/auth-entrypoint.sh
 
 RUN a2enconf servername \
