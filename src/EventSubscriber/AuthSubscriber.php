@@ -50,6 +50,27 @@ final class AuthSubscriber implements EventSubscriberInterface
         $session = $request->hasSession() ? $request->getSession() : null;
 
         if ($session !== null && $session->get('_authenticated') === true) {
+            $idleTimeout = $this->getIdleTimeoutSeconds();
+
+            if ($idleTimeout > 0) {
+                $lastActivity = $session->get('_last_activity');
+
+                if ($lastActivity !== null && (time() - (int) $lastActivity) > $idleTimeout) {
+                    $session->invalidate();
+
+                    $event->setResponse(new JsonResponse([
+                        'error' => [
+                            'code' => 'not_authenticated',
+                            'message' => 'Session expired.',
+                        ],
+                    ], Response::HTTP_UNAUTHORIZED));
+
+                    return;
+                }
+            }
+
+            $session->set('_last_activity', time());
+
             return;
         }
 
@@ -59,6 +80,19 @@ final class AuthSubscriber implements EventSubscriberInterface
                 'message' => 'Authentication required.',
             ],
         ], Response::HTTP_UNAUTHORIZED));
+    }
+
+    private function getIdleTimeoutSeconds(): int
+    {
+        $value = $this->readEnvString('SESSION_IDLE_TIMEOUT_SECONDS');
+
+        if ($value === null) {
+            return 0;
+        }
+
+        $seconds = (int) $value;
+
+        return $seconds > 0 ? $seconds : 0;
     }
 
     private function isAuthConfigured(): bool

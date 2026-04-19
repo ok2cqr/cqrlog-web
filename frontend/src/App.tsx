@@ -733,7 +733,7 @@ function parseSolarDataSummary(responseText: string): string {
 }
 
 export default function App() {
-  const [authState, setAuthState] = useState<'checking' | 'logged-in' | 'logged-out'>('checking');
+  const [authState, setAuthState] = useState<'checking' | 'logged-in' | 'logged-out' | 'session-expired'>('checking');
   const [authRequired, setAuthRequired] = useState(true);
   const [loginError, setLoginError] = useState('');
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
@@ -748,7 +748,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    setOnUnauthorized(() => setAuthState('logged-out'));
+    setOnUnauthorized(() => {
+      setAuthState((prev) => prev === 'logged-out' ? 'logged-out' : 'session-expired');
+      setLoginError('');
+      setLoginForm({ username: '', password: '' });
+    });
     return () => setOnUnauthorized(null);
   }, []);
 
@@ -758,7 +762,13 @@ export default function App() {
     try {
       const result = await login(loginForm.username, loginForm.password);
       if (result.authenticated) {
-        setAuthState('logged-in');
+        setAuthState((prev) => {
+          if (prev === 'session-expired') {
+            setSubmitState({ status: 'idle', message: '' });
+          }
+
+          return 'logged-in';
+        });
         setLoginForm({ username: '', password: '' });
       }
     } catch (err) {
@@ -3509,6 +3519,35 @@ export default function App() {
           </div>
         ) : null}
       </main>
+      {authState === 'session-expired' ? (
+        <div className="login-overlay">
+          <form className="login-form" onSubmit={handleLogin}>
+            <h1 className="login-title">Session expired</h1>
+            <p className="login-subtitle">Please log in again to continue.</p>
+            {loginError && <p className="login-error">{loginError}</p>}
+            <label className="field">
+              <span>Username</span>
+              <input
+                type="text"
+                value={loginForm.username}
+                onChange={(e) => setLoginForm((prev) => ({ ...prev, username: e.target.value }))}
+                autoFocus
+                autoComplete="username"
+              />
+            </label>
+            <label className="field">
+              <span>Password</span>
+              <input
+                type="password"
+                value={loginForm.password}
+                onChange={(e) => setLoginForm((prev) => ({ ...prev, password: e.target.value }))}
+                autoComplete="current-password"
+              />
+            </label>
+            <button className="button button--primary" type="submit">Log in</button>
+          </form>
+        </div>
+      ) : null}
     </div>
   );
 }

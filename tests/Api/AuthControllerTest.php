@@ -144,4 +144,50 @@ final class AuthControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
     }
+
+    #[Test]
+    public function idleTimeoutExpiresStaleSessions(): void
+    {
+        $_SERVER['SESSION_IDLE_TIMEOUT_SECONDS'] = '1';
+
+        try {
+            $this->client->request('POST', '/api/auth/login', [], [], [
+                'CONTENT_TYPE' => 'application/json',
+            ], json_encode(['username' => 'testuser', 'password' => 'testpass']));
+
+            self::assertResponseStatusCodeSame(Response::HTTP_OK);
+
+            sleep(2);
+
+            $this->client->request('GET', '/api/profiles');
+
+            self::assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
+
+            $payload = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+            self::assertSame('not_authenticated', $payload['error']['code']);
+        } finally {
+            unset($_SERVER['SESSION_IDLE_TIMEOUT_SECONDS']);
+        }
+    }
+
+    #[Test]
+    public function idleTimeoutDoesNotExpireActiveSessions(): void
+    {
+        $_SERVER['SESSION_IDLE_TIMEOUT_SECONDS'] = '300';
+
+        try {
+            $this->client->request('POST', '/api/auth/login', [], [], [
+                'CONTENT_TYPE' => 'application/json',
+            ], json_encode(['username' => 'testuser', 'password' => 'testpass']));
+
+            self::assertResponseStatusCodeSame(Response::HTTP_OK);
+
+            $this->client->request('GET', '/api/profiles');
+
+            self::assertResponseIsSuccessful();
+        } finally {
+            unset($_SERVER['SESSION_IDLE_TIMEOUT_SECONDS']);
+        }
+    }
 }

@@ -64,6 +64,13 @@ textarea {
   font-size: 0.95rem;
 }
 
+.login-subtitle {
+  text-align: center;
+  color: #6b7d90;
+  font-size: 0.95rem;
+  margin: -0.25rem 0 0;
+}
+
 .login-error {
   color: #b91c1c;
   background: #fef2f2;
@@ -72,6 +79,16 @@ textarea {
   border: 1px solid #fecaca;
   font-size: 0.9rem;
   margin: 0;
+}
+
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: rgba(245, 248, 252, 0.92);
+  backdrop-filter: blur(6px);
 }
 
 .sidebar__spacer {
@@ -988,7 +1005,8 @@ textarea {
   color-scheme: dark;
 }
 
-:root[data-theme='dark'] .login-loading {
+:root[data-theme='dark'] .login-loading,
+:root[data-theme='dark'] .login-subtitle {
   color: #9cb0c6;
 }
 
@@ -996,6 +1014,10 @@ textarea {
   color: #fca5a5;
   background: rgba(127, 29, 29, 0.3);
   border-color: rgba(252, 165, 165, 0.2);
+}
+
+:root[data-theme='dark'] .login-overlay {
+  background: rgba(12, 18, 26, 0.92);
 }
 
 :root[data-theme='dark'] .sidebar {

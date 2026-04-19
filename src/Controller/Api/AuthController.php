@@ -62,6 +62,7 @@ final class AuthController extends AbstractController
 
         $session = $request->getSession();
         $session->set('_authenticated', true);
+        $session->set('_last_activity', time());
 
         return new JsonResponse(['authenticated' => true]);
     }
@@ -79,6 +80,19 @@ final class AuthController extends AbstractController
         $session = $request->hasSession() ? $request->getSession() : null;
         $authenticated = $session !== null && $session->get('_authenticated') === true;
 
+        if ($authenticated) {
+            $idleTimeout = $this->getIdleTimeoutSeconds();
+
+            if ($idleTimeout > 0) {
+                $lastActivity = $session->get('_last_activity');
+
+                if ($lastActivity !== null && (time() - (int) $lastActivity) > $idleTimeout) {
+                    $session->invalidate();
+                    $authenticated = false;
+                }
+            }
+        }
+
         return new JsonResponse(['authenticated' => $authenticated, 'authRequired' => true]);
     }
 
@@ -90,6 +104,19 @@ final class AuthController extends AbstractController
         }
 
         return new JsonResponse(['authenticated' => false]);
+    }
+
+    private function getIdleTimeoutSeconds(): int
+    {
+        $value = $this->readEnvString('SESSION_IDLE_TIMEOUT_SECONDS');
+
+        if ($value === null) {
+            return 0;
+        }
+
+        $seconds = (int) $value;
+
+        return $seconds > 0 ? $seconds : 0;
     }
 
     private function readEnvString(string $name): ?string
