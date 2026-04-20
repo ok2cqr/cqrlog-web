@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Api;
 
+use App\Security\LoginRateLimiter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -12,6 +13,11 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class AuthController extends AbstractController
 {
+    public function __construct(
+        private readonly LoginRateLimiter $rateLimiter,
+    ) {
+    }
+
     #[Route('/api/auth/login', name: 'api_auth_login', methods: ['POST'])]
     public function login(Request $request): JsonResponse
     {
@@ -25,6 +31,17 @@ final class AuthController extends AbstractController
                     'message' => 'Authentication is not configured.',
                 ],
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $clientIp = $request->getClientIp() ?? 'unknown';
+
+        if ($this->rateLimiter->isBlocked($clientIp)) {
+            return new JsonResponse([
+                'error' => [
+                    'code' => 'too_many_attempts',
+                    'message' => 'Too many login attempts. Please try again later.',
+                ],
+            ], Response::HTTP_TOO_MANY_REQUESTS);
         }
 
         $content = $request->getContent();
@@ -43,6 +60,8 @@ final class AuthController extends AbstractController
         $password = $data['password'] ?? '';
 
         if (!is_string($username) || !is_string($password) || $username === '' || $password === '') {
+            $this->rateLimiter->recordFailedAttempt($clientIp);
+
             return new JsonResponse([
                 'error' => [
                     'code' => 'invalid_credentials',
@@ -52,6 +71,8 @@ final class AuthController extends AbstractController
         }
 
         if (!hash_equals($expectedUsername, $username) || !hash_equals($expectedPassword, $password)) {
+            $this->rateLimiter->recordFailedAttempt($clientIp);
+
             return new JsonResponse([
                 'error' => [
                     'code' => 'invalid_credentials',
@@ -59,6 +80,8 @@ final class AuthController extends AbstractController
                 ],
             ], Response::HTTP_UNAUTHORIZED);
         }
+
+        $this->rateLimiter->reset($clientIp);
 
         $session = $request->getSession();
         $session->set('_authenticated', true);

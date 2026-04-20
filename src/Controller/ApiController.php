@@ -23,7 +23,6 @@ final class ApiController extends AbstractController
     {
         return $this->json([
             'status' => 'ok',
-            'environment' => $this->readEnvString('APP_ENV') ?? 'dev',
         ]);
     }
 

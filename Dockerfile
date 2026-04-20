@@ -64,7 +64,7 @@ RUN composer dump-autoload \
         --classmap-authoritative \
         --no-interaction \
     && rm -rf frontend/node_modules frontend/dist var/cache/* var/log/* \
-    && mkdir -p var/cache var/log \
+    && mkdir -p var/cache var/log var/rate_limit \
     && chown -R www-data:www-data var
 
 EXPOSE 80

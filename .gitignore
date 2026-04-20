@@ -22,6 +22,7 @@
 /frontend/.env.local
 /cqrlog002-data.sql
 /cqrlog002_2026-03-16.sql
+/var/rate_limit/
 /coverage/
 /frontend/coverage/
 /npm-debug.log*
