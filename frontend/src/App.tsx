@@ -238,7 +238,7 @@ const modeOptions = ['CW', 'SSB', 'FT8', 'RTTY', 'AM', 'FM'];
 const qslOptions = ['', 'Y', 'N', 'R'];
 const MIN_RADIO_POLL_INTERVAL_SECONDS = 1;
 const DEFAULT_RADIO_SYNC_CONFIG: RadioSyncConfig = {
-  url: 'https://example.com/radio-json.php',
+  url: '',
   pollIntervalSeconds: 2,
 };
 const ENTRY_ARROW_NAV_ORDER: EntryArrowField[] = [
@@ -989,6 +989,10 @@ export default function App() {
   }, [settings]);
 
   useEffect(() => {
+    if (authState !== 'logged-in') {
+      return;
+    }
+
     let cancelled = false;
 
     void getFrontendConfig()
@@ -1021,7 +1025,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authState]);
 
   useEffect(() => {
     if (radioSyncConfig === null) {

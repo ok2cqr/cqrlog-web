@@ -31,7 +31,7 @@ final class ApiController extends AbstractController
     public function frontendConfig(): JsonResponse
     {
         return $this->json([
-            'radioSyncDefaultUrl' => $this->readEnvString('FRONTEND_RADIO_SYNC_DEFAULT_URL') ?? 'https://example.com/radio-json.php',
+            'radioSyncDefaultUrl' => $this->readEnvString('FRONTEND_RADIO_SYNC_DEFAULT_URL'),
             'radioSyncDefaultPollIntervalSeconds' => $this->normalizePositiveInt(
                 $this->readEnvValue('FRONTEND_RADIO_SYNC_DEFAULT_POLL_INTERVAL_SECONDS'),
                 2,
