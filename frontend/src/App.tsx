@@ -2160,6 +2160,7 @@ export default function App() {
               onChange={(e) => setLoginForm((prev) => ({ ...prev, username: e.target.value }))}
               autoFocus
               autoComplete="username"
+              autoCapitalize="none"
             />
           </label>
           <label className="field">
@@ -3533,6 +3534,7 @@ export default function App() {
                 onChange={(e) => setLoginForm((prev) => ({ ...prev, username: e.target.value }))}
                 autoFocus
                 autoComplete="username"
+                autoCapitalize="none"
               />
             </label>
             <label className="field">
