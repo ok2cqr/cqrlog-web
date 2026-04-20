@@ -1120,6 +1120,10 @@ export default function App() {
   }, [settings.theme, systemTheme]);
 
   useEffect(() => {
+    if (authState !== 'logged-in') {
+      return;
+    }
+
     let cancelled = false;
 
     setProfiles((current) => ({
@@ -1155,7 +1159,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [profilesReloadKey]);
+  }, [authState, profilesReloadKey]);
 
   useEffect(() => {
     if (profiles.status !== 'ready') {
