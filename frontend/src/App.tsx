@@ -784,7 +784,7 @@ export default function App() {
     }
   }
 
-  const DOUBLE_ESCAPE_CLEAR_WINDOW_MS = 500;
+  const DOUBLE_SHORTCUT_CLEAR_WINDOW_MS = 500;
   const initialFrontendSettingsStateRef = useRef<InitialFrontendSettingsState | null>(null);
 
   if (initialFrontendSettingsStateRef.current === null) {
@@ -878,6 +878,7 @@ export default function App() {
   const callsignInputRef = useRef<HTMLInputElement | null>(null);
   const entryArrowFieldRefs = useRef<Partial<Record<EntryArrowField, EntryArrowElement | null>>>({});
   const lastEscapeAtRef = useRef(0);
+  const lastBackslashAtRef = useRef(0);
   const lookupKeyRef = useRef<string>('');
   const dxccLookupKeyRef = useRef<string>('');
   const editDxccLookupKeyRef = useRef<string>('');
@@ -911,20 +912,44 @@ export default function App() {
     }
 
     const handleWindowKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.repeat) {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.repeat) {
         return;
       }
 
       const now = Date.now();
 
-      if (now - lastEscapeAtRef.current <= DOUBLE_ESCAPE_CLEAR_WINDOW_MS) {
-        lastEscapeAtRef.current = 0;
-        event.preventDefault();
-        resetEntryForm();
+      if (event.key === 'Escape') {
+        if (now - lastEscapeAtRef.current <= DOUBLE_SHORTCUT_CLEAR_WINDOW_MS) {
+          lastEscapeAtRef.current = 0;
+          lastBackslashAtRef.current = 0;
+          event.preventDefault();
+          resetEntryForm();
+          return;
+        }
+
+        lastEscapeAtRef.current = now;
+        lastBackslashAtRef.current = 0;
         return;
       }
 
-      lastEscapeAtRef.current = now;
+      if (event.key === '\\') {
+        if (now - lastBackslashAtRef.current <= DOUBLE_SHORTCUT_CLEAR_WINDOW_MS) {
+          lastBackslashAtRef.current = 0;
+          lastEscapeAtRef.current = 0;
+          event.preventDefault();
+          resetEntryForm();
+          return;
+        }
+
+        lastBackslashAtRef.current = now;
+        lastEscapeAtRef.current = 0;
+        return;
+      }
+
+      if (lastEscapeAtRef.current !== 0 || lastBackslashAtRef.current !== 0) {
+        lastEscapeAtRef.current = 0;
+        lastBackslashAtRef.current = 0;
+      }
     };
 
     window.addEventListener('keydown', handleWindowKeyDown);
