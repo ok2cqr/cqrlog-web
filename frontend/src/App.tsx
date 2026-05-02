@@ -263,18 +263,18 @@ const ENTRY_ARROW_NAV_ORDER: EntryArrowField[] = [
 const DX_CLUSTER_URL = 'https://www.hamqth.com/dxc_csv.php?limit=10';
 const DX_CLUSTER_POLL_INTERVAL_MS = 20_000;
 const defaultFrequencyByBand: Record<string, string> = {
-  '160M': '1.825',
-  '80M': '3.525',
-  '60M': '5.535',
-  '40M': '7.025',
-  '30M': '10.120',
-  '20M': '14.025',
-  '17M': '18.068',
-  '15M': '21.025',
-  '12M': '24.890',
-  '10M': '28.025',
-  '6M': '50.313',
-  '2M': '144.100',
+  '160M': '1.8250',
+  '80M': '3.5250',
+  '60M': '5.5350',
+  '40M': '7.0250',
+  '30M': '10.1200',
+  '20M': '14.0250',
+  '17M': '18.0680',
+  '15M': '21.0250',
+  '12M': '24.8900',
+  '10M': '28.0250',
+  '6M': '50.3130',
+  '2M': '144.1000',
 };
 
 const CZECH_NUMBER_ROW_MAP: Record<string, string> = {
@@ -327,10 +327,10 @@ function createInitialFormState(): FormState {
   const storedMode = readStoredValue(STORAGE_KEYS.mode, 'CW');
   const initialBand = bandOptions.includes(storedBand) ? storedBand : '40M';
   const initialMode = modeOptions.includes(storedMode) ? storedMode : 'CW';
-  const initialFrequency = readStoredValue(
+  const initialFrequency = formatFrequencyInputValue(readStoredValue(
     STORAGE_KEYS.frequency,
-    defaultFrequencyByBand[initialBand] ?? '7.025',
-  );
+    defaultFrequencyByBand[initialBand] ?? '7.0250',
+  ));
   const initialPower = readStoredValue(STORAGE_KEYS.power, '100');
 
   return {
@@ -398,6 +398,12 @@ function normalizeRequiredFrequency(value: string): number {
   }
 
   return parsed;
+}
+
+function formatFrequencyInputValue(value: string): string {
+  const parsed = Number.parseFloat(value.trim());
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed.toFixed(4) : value;
 }
 
 function readStoredValue(key: string, fallback: string): string {
@@ -532,11 +538,11 @@ function formatQsoDuration(startedAt: Date | null): string | null {
 }
 
 function formatFrequency(value: number): string {
-  return Number.isInteger(value) ? value.toString() : value.toFixed(3).replace(/\.?0+$/, '');
+  return value.toFixed(4);
 }
 
 function formatRadioFrequency(value: number): string {
-  return value.toFixed(6).replace(/\.?0+$/, '');
+  return value.toFixed(4);
 }
 
 function formatOptionalNumber(value: number | null | undefined): string {
@@ -1957,7 +1963,7 @@ export default function App() {
       ...cleared,
       band: form.band,
       mode: form.mode,
-      frequency: form.frequency,
+      frequency: formatFrequencyInputValue(form.frequency),
       power: form.power,
     });
     setLookup({
@@ -2343,6 +2349,7 @@ export default function App() {
                         band: derivedBand ?? current.band,
                       }));
                     }}
+                    onBlur={() => updateField('frequency', formatFrequencyInputValue(form.frequency))}
                     inputMode="decimal"
                     required
                   />
@@ -2916,6 +2923,21 @@ export default function App() {
                                     ...current.form,
                                     frequency: nextValue,
                                     band: derivedBand ?? current.form.band,
+                                  },
+                                };
+                              });
+                            }}
+                            onBlur={() => {
+                              setEditDialog((current) => {
+                                if (current.form === null) {
+                                  return current;
+                                }
+
+                                return {
+                                  ...current,
+                                  form: {
+                                    ...current.form,
+                                    frequency: formatFrequencyInputValue(current.form.frequency),
                                   },
                                 };
                               });
