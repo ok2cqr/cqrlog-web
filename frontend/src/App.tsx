@@ -79,7 +79,7 @@ type DxccState = {
 };
 
 type RadioSyncState = 'idle' | 'online' | 'offline';
-type ViewMode = 'entry' | 'list' | 'settings' | 'cluster';
+type ViewMode = 'entry' | 'list' | 'settings' | 'cluster' | 'contest';
 type ThemePreference = 'auto' | 'light' | 'dark';
 type ResolvedTheme = 'light' | 'dark';
 
@@ -146,6 +146,29 @@ type QsoListState = {
   perPage: number;
   totalPages: number;
   message: string;
+};
+
+type ContestFormState = {
+  callsign: string;
+  rstSent: string;
+  serialSent: string;
+  msgSent: string;
+  rstReceived: string;
+  serialReceived: string;
+  msgReceived: string;
+};
+
+type ContestLookupState = {
+  status: 'idle' | 'loading' | 'ready' | 'error';
+  message: string;
+  recentQsos: RecentQso[];
+  recentQsoCount: number;
+};
+
+type ContestSettings = {
+  contestName: string;
+  serialSent: string;
+  autoIncrement: boolean;
 };
 
 type DxClusterItem = {
@@ -225,6 +248,7 @@ const STORAGE_KEYS = {
   frequency: 'cqrlog.frequency',
   power: 'cqrlog.power',
   settings: 'cqrlog.settings',
+  contest: 'cqrlog.contest',
 } as const;
 
 const DEFAULT_FRONTEND_SETTINGS: FrontendSettings = {
@@ -453,6 +477,51 @@ function readInitialFrontendSettingsState(): InitialFrontendSettingsState {
       settings: DEFAULT_FRONTEND_SETTINGS,
     };
   }
+}
+
+const DEFAULT_CONTEST_SETTINGS: ContestSettings = {
+  contestName: '',
+  serialSent: '001',
+  autoIncrement: true,
+};
+
+function readInitialContestSettings(): ContestSettings {
+  if (typeof window === 'undefined') {
+    return DEFAULT_CONTEST_SETTINGS;
+  }
+
+  const rawValue = window.localStorage.getItem(STORAGE_KEYS.contest);
+
+  if (rawValue === null) {
+    return DEFAULT_CONTEST_SETTINGS;
+  }
+
+  try {
+    const parsed = JSON.parse(rawValue);
+
+    return {
+      contestName: typeof parsed.contestName === 'string' ? parsed.contestName : DEFAULT_CONTEST_SETTINGS.contestName,
+      serialSent: typeof parsed.serialSent === 'string' && parsed.serialSent.trim() !== ''
+        ? parsed.serialSent
+        : DEFAULT_CONTEST_SETTINGS.serialSent,
+      autoIncrement: typeof parsed.autoIncrement === 'boolean'
+        ? parsed.autoIncrement
+        : DEFAULT_CONTEST_SETTINGS.autoIncrement,
+    };
+  } catch {
+    return DEFAULT_CONTEST_SETTINGS;
+  }
+}
+
+function defaultRstForMode(mode: string): string {
+  return mode === 'CW' ? '599' : '59';
+}
+
+function incrementSerial(value: string): string {
+  const parsed = Number.parseInt(value.replace(/\D+/g, ''), 10);
+  const next = (Number.isNaN(parsed) ? 0 : parsed) + 1;
+
+  return next.toString().padStart(Math.max(value.trim().length, 3), '0');
 }
 
 function normalizeCzechNumberRow(value: string): string {
@@ -856,6 +925,53 @@ export default function App() {
     status: 'idle',
     message: '',
   });
+  const initialContestSettingsRef = useRef<ContestSettings | null>(null);
+
+  if (initialContestSettingsRef.current === null) {
+    initialContestSettingsRef.current = readInitialContestSettings();
+  }
+
+  const [contestName, setContestName] = useState(() => initialContestSettingsRef.current?.contestName ?? '');
+  const [contestAutoIncrement, setContestAutoIncrement] = useState(
+    () => initialContestSettingsRef.current?.autoIncrement ?? true,
+  );
+  const [contestForm, setContestForm] = useState<ContestFormState>(() => {
+    const storedMode = readStoredValue(STORAGE_KEYS.mode, 'CW');
+
+    return {
+      callsign: '',
+      rstSent: defaultRstForMode(storedMode),
+      serialSent: initialContestSettingsRef.current?.serialSent ?? '001',
+      msgSent: '',
+      rstReceived: defaultRstForMode(storedMode),
+      serialReceived: '',
+      msgReceived: '',
+    };
+  });
+  const [contestLookup, setContestLookup] = useState<ContestLookupState>({
+    status: 'idle',
+    message: 'Leave the Call field to check previous QSOs.',
+    recentQsos: [],
+    recentQsoCount: 0,
+  });
+  const [contestLookupCallsign, setContestLookupCallsign] = useState('');
+  const [contestQsoList, setContestQsoList] = useState<QsoListState>({
+    status: 'idle',
+    items: [],
+    totalCount: 0,
+    page: 1,
+    perPage: 50,
+    totalPages: 1,
+    message: 'Set a contest name to list its QSOs.',
+  });
+  const [contestQsoReloadKey, setContestQsoReloadKey] = useState(0);
+  const [contestSubmitState, setContestSubmitState] = useState<{
+    status: 'idle' | 'saving' | 'saved' | 'error';
+    message: string;
+  }>({
+    status: 'idle',
+    message: '',
+  });
   const [editDialog, setEditDialog] = useState<EditDialogState>({
     status: 'closed',
     entryId: null,
@@ -888,6 +1004,8 @@ export default function App() {
   const lookupKeyRef = useRef<string>('');
   const dxccLookupKeyRef = useRef<string>('');
   const editDxccLookupKeyRef = useRef<string>('');
+  const contestCallsignInputRef = useRef<HTMLInputElement | null>(null);
+  const contestLookupKeyRef = useRef<string>('');
   const selectableProfiles = settings.showHiddenProfiles
     ? profiles.items
     : profiles.items.filter((profile) => profile.visible);
@@ -907,6 +1025,18 @@ export default function App() {
 
     const timeoutId = window.setTimeout(() => {
       callsignInputRef.current?.focus();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [viewMode]);
+
+  useEffect(() => {
+    if (viewMode !== 'contest') {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      contestCallsignInputRef.current?.focus();
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
@@ -1020,6 +1150,17 @@ export default function App() {
   }, [settings]);
 
   useEffect(() => {
+    window.localStorage.setItem(
+      STORAGE_KEYS.contest,
+      JSON.stringify({
+        contestName,
+        serialSent: contestForm.serialSent,
+        autoIncrement: contestAutoIncrement,
+      }),
+    );
+  }, [contestAutoIncrement, contestForm.serialSent, contestName]);
+
+  useEffect(() => {
     if (authState !== 'logged-in') {
       return;
     }
@@ -1123,6 +1264,14 @@ export default function App() {
       ...current,
       rstSent: form.mode === 'CW' ? '599' : '59',
       rstReceived: form.mode === 'CW' ? '599' : '59',
+    }));
+  }, [form.mode]);
+
+  useEffect(() => {
+    setContestForm((current) => ({
+      ...current,
+      rstSent: defaultRstForMode(form.mode),
+      rstReceived: defaultRstForMode(form.mode),
     }));
   }, [form.mode]);
 
@@ -1314,6 +1463,61 @@ export default function App() {
 
     return () => window.clearTimeout(timeoutId);
   }, [callsignNoteDirty, form.qsoDate, lookupCallsign]);
+
+  useEffect(() => {
+    if (contestLookupCallsign === '') {
+      setContestLookup({
+        status: 'idle',
+        message: 'Leave the Call field to check previous QSOs.',
+        recentQsos: [],
+        recentQsoCount: 0,
+      });
+
+      return undefined;
+    }
+
+    const currentLookupKey = `${contestLookupCallsign}|${form.qsoDate}`;
+    contestLookupKeyRef.current = currentLookupKey;
+
+    setContestLookup((current) => ({
+      ...current,
+      status: 'loading',
+      message: 'Checking previous QSOs…',
+    }));
+
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const context = await getCallsignContext(contestLookupCallsign, form.qsoDate || undefined);
+
+        if (contestLookupKeyRef.current !== currentLookupKey) {
+          return;
+        }
+
+        setContestLookup({
+          status: 'ready',
+          message:
+            context.recentQsoCount > 0
+              ? `Found ${context.recentQsoCount} previous QSO(s) with ${context.callsign}.`
+              : `No previous QSO with ${context.callsign}.`,
+          recentQsos: context.recentQsos,
+          recentQsoCount: context.recentQsoCount,
+        });
+      } catch (error) {
+        if (contestLookupKeyRef.current !== currentLookupKey) {
+          return;
+        }
+
+        setContestLookup({
+          status: 'error',
+          message: error instanceof Error ? error.message : 'Unable to check previous QSOs.',
+          recentQsos: [],
+          recentQsoCount: 0,
+        });
+      }
+    }, 250);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [contestLookupCallsign, form.qsoDate]);
 
   useEffect(() => {
     const uppercaseCallsign = deferredLookupCallsign;
@@ -1530,6 +1734,73 @@ export default function App() {
   }, [qsoList.page, qsoList.perPage, qsoListReloadKey, viewMode]);
 
   useEffect(() => {
+    if (viewMode !== 'contest') {
+      return undefined;
+    }
+
+    const trimmedContestName = contestName.trim();
+
+    if (trimmedContestName === '') {
+      setContestQsoList((current) => ({
+        ...current,
+        status: 'idle',
+        items: [],
+        totalCount: 0,
+        totalPages: 1,
+        message: 'Set a contest name to list its QSOs.',
+      }));
+
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    setContestQsoList((current) => ({
+      ...current,
+      status: 'loading',
+      message: 'Loading contest QSOs…',
+    }));
+
+    const timeoutId = window.setTimeout(() => {
+      void getLogEntries(1, 50, { contestName: trimmedContestName })
+        .then((response) => {
+          if (cancelled) {
+            return;
+          }
+
+          setContestQsoList({
+            status: 'ready',
+            items: response.items,
+            totalCount: response.totalCount,
+            page: response.page,
+            perPage: response.perPage,
+            totalPages: response.totalPages,
+            message: response.totalCount === 0 ? 'No QSOs logged in this contest yet.' : '',
+          });
+        })
+        .catch((error) => {
+          if (cancelled) {
+            return;
+          }
+
+          setContestQsoList((current) => ({
+            ...current,
+            status: 'error',
+            items: [],
+            totalCount: 0,
+            totalPages: 1,
+            message: error instanceof Error ? error.message : 'Unable to load contest QSOs.',
+          }));
+        });
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [contestName, contestQsoReloadKey, viewMode]);
+
+  useEffect(() => {
     if (viewMode !== 'cluster') {
       return undefined;
     }
@@ -1625,6 +1896,17 @@ export default function App() {
 
   function openClusterView(): void {
     setViewMode('cluster');
+  }
+
+  function openContestView(): void {
+    setViewMode('contest');
+  }
+
+  function updateContestField<K extends keyof ContestFormState>(field: K, value: ContestFormState[K]): void {
+    setContestForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
   }
 
   function updateSetting<K extends keyof FrontendSettings>(key: K, value: FrontendSettings[K]): void {
@@ -2062,6 +2344,68 @@ export default function App() {
     }
   }
 
+  async function handleContestSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    setContestSubmitState({
+      status: 'saving',
+      message: 'Saving QSO…',
+    });
+
+    try {
+      const payload: LogEntryPayload = {
+        qsoDate: form.qsoDate,
+        timeOn: form.timeOn,
+        timeOff: normalizeOptionalString(form.timeOff),
+        callsign: contestForm.callsign.trim(),
+        frequency: normalizeRequiredFrequency(form.frequency),
+        mode: form.mode.trim(),
+        band: normalizeOptionalString(form.band),
+        power: normalizeOptionalString(form.power),
+        rstSent: normalizeOptionalString(contestForm.rstSent),
+        rstReceived: normalizeOptionalString(contestForm.rstReceived),
+        stx: normalizeOptionalString(contestForm.serialSent),
+        srx: normalizeOptionalString(contestForm.serialReceived),
+        stxString: normalizeOptionalString(contestForm.msgSent),
+        srxString: normalizeOptionalString(contestForm.msgReceived),
+        contestName: normalizeOptionalString(contestName),
+        profileId: settings.defaultProfileId,
+      };
+
+      const savedLogEntry = await createLogEntry(payload);
+
+      setContestForm((current) => ({
+        ...current,
+        callsign: '',
+        rstSent: defaultRstForMode(form.mode),
+        rstReceived: defaultRstForMode(form.mode),
+        serialSent: contestAutoIncrement ? incrementSerial(current.serialSent) : current.serialSent,
+        serialReceived: '',
+        msgReceived: '',
+      }));
+      setContestLookup({
+        status: 'idle',
+        message: 'Leave the Call field to check previous QSOs.',
+        recentQsos: [],
+        recentQsoCount: 0,
+      });
+      setContestLookupCallsign('');
+      setContestQsoReloadKey((current) => current + 1);
+      setContestSubmitState({
+        status: 'saved',
+        message: `Saved QSO #${savedLogEntry.id}.`,
+      });
+
+      window.requestAnimationFrame(() => {
+        contestCallsignInputRef.current?.focus();
+      });
+    } catch (error) {
+      setContestSubmitState({
+        status: 'error',
+        message: error instanceof Error ? error.message : 'Saving failed.',
+      });
+    }
+  }
+
   function handleClear(): void {
     const shouldClear = window.confirm('Clear all entered QSO fields?');
 
@@ -2170,6 +2514,7 @@ export default function App() {
 
   const qsoDuration = formatQsoDuration(qsoStartedAt);
   const isEntryView = viewMode === 'entry';
+  const isContestView = viewMode === 'contest';
   const isListView = viewMode === 'list';
   const isSettingsView = viewMode === 'settings';
   const isClusterView = viewMode === 'cluster';
@@ -2228,6 +2573,21 @@ export default function App() {
           onClick={openEntryView}
         >
           +
+        </button>
+        <button
+          className={isContestView ? 'sidebar__menu sidebar__button--active' : 'sidebar__menu'}
+          type="button"
+          aria-label="Contest"
+          title="Contest"
+          onClick={openContestView}
+        >
+          <svg className="sidebar__icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7 4h10v3a5 5 0 0 1-10 0V4Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+            <path d="M7 5H4.5v1.5A3.5 3.5 0 0 0 8 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M17 5h2.5v1.5A3.5 3.5 0 0 1 16 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M12 12v4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+            <path d="M8.5 19.5h7M10 16.5h4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+          </svg>
         </button>
         <button
           className={isListView ? 'sidebar__menu sidebar__button--active' : 'sidebar__menu'}
@@ -2741,6 +3101,238 @@ export default function App() {
               ) : null}
             </aside>
           </div>
+        </form>
+        ) : isContestView ? (
+        <form className="panel" onSubmit={handleContestSubmit}>
+          <section className="topbar">
+            <div className="topbar__dxcc">
+              <span className="meta-strip__label">
+                <span>Contest</span>
+                {radioSyncState !== 'idle' ? (
+                  <span
+                    className={`field__status field__status--${radioSyncState}`}
+                    aria-hidden="true"
+                    title={radioSyncState === 'online' ? 'Radio sync online' : 'Radio sync offline'}
+                  />
+                ) : null}
+              </span>
+              <p className="topbar__line">
+                {form.frequency} MHz · {form.band} · {form.mode} · {form.power} W
+              </p>
+              <p className="topbar__subtle">
+                {form.qsoDate} {form.timeOn} — band, mode and frequency follow the QSO entry form.
+              </p>
+            </div>
+
+            <div className="topbar__actions">
+              <button
+                className="button button--primary button--icon"
+                type="submit"
+                disabled={contestSubmitState.status === 'saving'}
+                aria-label={contestSubmitState.status === 'saving' ? 'Saving QSO' : 'Save QSO'}
+                title={contestSubmitState.status === 'saving' ? 'Saving QSO' : 'Save QSO'}
+              >
+                <span aria-hidden="true">{contestSubmitState.status === 'saving' ? '…' : '✓'}</span>
+                <span className="visually-hidden">{contestSubmitState.status === 'saving' ? 'Saving QSO' : 'Save QSO'}</span>
+              </button>
+            </div>
+          </section>
+
+          <section className="grid grid--contest">
+            <label className="field field--wide">
+              <span>Contest name</span>
+              <input
+                value={contestName}
+                maxLength={40}
+                onChange={(event) => setContestName(event.target.value)}
+                required
+              />
+            </label>
+
+            <label className="offline-toggle">
+              <input
+                type="checkbox"
+                checked={contestAutoIncrement}
+                onChange={(event) => setContestAutoIncrement(event.target.checked)}
+              />
+              <span>NR s auto +1</span>
+            </label>
+          </section>
+
+          <section className="grid grid--contest-entry">
+            <label className="field">
+              <span>Call</span>
+              <input
+                ref={contestCallsignInputRef}
+                value={contestForm.callsign}
+                onChange={(event) => {
+                  updateContestField('callsign', normalizeCallsignInput(event.target.value));
+                  setContestLookup({
+                    status: 'idle',
+                    message: 'Leave the Call field to check previous QSOs.',
+                    recentQsos: [],
+                    recentQsoCount: 0,
+                  });
+                  setContestLookupCallsign('');
+                }}
+                onBlur={() => setContestLookupCallsign(contestForm.callsign.trim().toUpperCase())}
+                required
+              />
+            </label>
+
+            <label className="field field--rst">
+              <span>RST s</span>
+              <input
+                value={contestForm.rstSent}
+                onChange={(event) => updateContestField('rstSent', normalizeCzechNumberRow(event.target.value))}
+                onFocus={(event) => selectRstEditableCharacter(event.currentTarget)}
+                maxLength={5}
+              />
+            </label>
+
+            <label className="field">
+              <span>NR s</span>
+              <input
+                value={contestForm.serialSent}
+                onChange={(event) => updateContestField('serialSent', normalizeCzechNumberRow(event.target.value))}
+                maxLength={6}
+              />
+            </label>
+
+            <label className="field">
+              <span>MSG s</span>
+              <input
+                value={contestForm.msgSent}
+                onChange={(event) => updateContestField('msgSent', event.target.value)}
+                maxLength={50}
+              />
+            </label>
+
+            <label className="field field--rst">
+              <span>RST r</span>
+              <input
+                value={contestForm.rstReceived}
+                onChange={(event) => updateContestField('rstReceived', normalizeCzechNumberRow(event.target.value))}
+                onFocus={(event) => selectRstEditableCharacter(event.currentTarget)}
+                maxLength={5}
+              />
+            </label>
+
+            <label className="field">
+              <span>NR r</span>
+              <input
+                value={contestForm.serialReceived}
+                onChange={(event) => updateContestField('serialReceived', normalizeCzechNumberRow(event.target.value))}
+                maxLength={6}
+              />
+            </label>
+
+            <label className="field">
+              <span>MSG r</span>
+              <input
+                value={contestForm.msgReceived}
+                onChange={(event) => updateContestField('msgReceived', event.target.value)}
+                maxLength={50}
+              />
+            </label>
+          </section>
+
+          {contestSubmitState.message !== '' ? (
+            <p
+              className={
+                contestSubmitState.status === 'error'
+                  ? 'submission-message submission-message--error'
+                  : 'submission-message'
+              }
+            >
+              {contestSubmitState.message}
+            </p>
+          ) : null}
+
+          <section className="history-panel">
+            <div className="history-panel__header">
+              <span className="meta-strip__label">Previous QSO</span>
+              <span className="history-panel__count">{contestLookup.message}</span>
+            </div>
+
+            <div className="history-table">
+              <div className="history-table__head">
+                <span>Date</span>
+                <span>Time</span>
+                <span>Callsign</span>
+                <span>Band</span>
+                <span>Mode</span>
+              </div>
+
+              {contestLookup.recentQsos.length > 0 ? (
+                contestLookup.recentQsos.map((qso) => (
+                  <div key={qso.id} className="history-table__row">
+                    <span>{qso.qsoDate}</span>
+                    <span>
+                      {qso.timeOn}
+                      {qso.timeOff ? ` / ${qso.timeOff}` : ''}
+                    </span>
+                    <span>{qso.callsign}</span>
+                    <span>{qso.band ?? '-'}</span>
+                    <span>{qso.mode}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="history-table__empty">Recent QSOs for this callsign will appear here.</div>
+              )}
+            </div>
+          </section>
+
+          <section>
+            <header className="list-header">
+              <div>
+                <h2 className="list-header__title">Contest QSOs</h2>
+                <p className="list-header__count">QSO count: {contestQsoList.totalCount}</p>
+              </div>
+            </header>
+
+            {contestQsoList.status === 'error' ? (
+              <p className="submission-message submission-message--error">{contestQsoList.message}</p>
+            ) : null}
+
+            <div className="qso-list-table qso-list-table--contest">
+              <div className="qso-list-table__head">
+                <span>QSO Date</span>
+                <span>Time</span>
+                <span>Callsign</span>
+                <span>RST s</span>
+                <span>NR s</span>
+                <span>MSG s</span>
+                <span>RST r</span>
+                <span>NR r</span>
+                <span>MSG r</span>
+                <span>Band</span>
+                <span>Mode</span>
+              </div>
+
+              {contestQsoList.items.length > 0 ? (
+                contestQsoList.items.map((item) => (
+                  <div key={item.id} className="qso-list-table__row">
+                    <span>{item.qsoDate}</span>
+                    <span>{item.timeOn}</span>
+                    <span>{item.callsign}</span>
+                    <span>{item.rstSent ?? '-'}</span>
+                    <span>{item.stx ?? '-'}</span>
+                    <span>{item.stxString ?? '-'}</span>
+                    <span>{item.rstReceived ?? '-'}</span>
+                    <span>{item.srx ?? '-'}</span>
+                    <span>{item.srxString ?? '-'}</span>
+                    <span>{item.band ?? '-'}</span>
+                    <span>{item.mode}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="qso-list-table__empty">
+                  {contestQsoList.status === 'loading' ? 'Loading…' : contestQsoList.message || 'No QSOs found.'}
+                </div>
+              )}
+            </div>
+          </section>
         </form>
         ) : isListView ? (
           <section className="panel panel--list">

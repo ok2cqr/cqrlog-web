@@ -99,6 +99,11 @@ export type LogEntryPayload = {
   clubNumber3?: string | null;
   clubNumber4?: string | null;
   clubNumber5?: string | null;
+  stx?: string | null;
+  srx?: string | null;
+  stxString?: string | null;
+  srxString?: string | null;
+  contestName?: string | null;
   profileId?: number | null;
 };
 

@@ -138,11 +138,19 @@ export function updateLogEntry(id: number, payload: Partial<LogEntryPayload>): P
   });
 }
 
-export function getLogEntries(page: number, perPage = 50): Promise<LogEntryListResponse> {
+export function getLogEntries(
+  page: number,
+  perPage = 50,
+  filters?: { contestName?: string },
+): Promise<LogEntryListResponse> {
   const params = new URLSearchParams({
     page: page.toString(),
     perPage: perPage.toString(),
   });
+
+  if (filters?.contestName) {
+    params.set('contestName', filters.contestName);
+  }
 
   return requestJson<LogEntryListResponse>(`/api/logEntries?${params.toString()}`);
 }

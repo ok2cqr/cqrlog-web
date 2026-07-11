@@ -249,6 +249,17 @@ textarea {
   gap: 0.55rem;
 }
 
+.grid--contest {
+  grid-template-columns: minmax(200px, 1fr) max-content;
+  gap: 0.55rem;
+  align-items: end;
+}
+
+.grid--contest-entry {
+  grid-template-columns: minmax(130px, 1.3fr) 70px 90px 1fr 70px 90px 1fr;
+  gap: 0.55rem;
+}
+
 .grid--geo {
   grid-template-columns: 1.8fr 0.9fr 0.65fr 1.55fr;
   gap: 0.55rem;
@@ -570,6 +581,7 @@ textarea {
 }
 
 .history-table__empty {
+  grid-template-columns: 1fr;
   color: #7288a0;
   background: rgba(255, 255, 255, 0.94);
 }
@@ -887,6 +899,11 @@ textarea {
   color: #7288a0;
 }
 
+.qso-list-table--contest .qso-list-table__head,
+.qso-list-table--contest .qso-list-table__row {
+  grid-template-columns: 96px 70px minmax(110px, 1.2fr) 62px 70px minmax(80px, 1fr) 62px 70px minmax(80px, 1fr) 64px 70px;
+}
+
 .dialog-backdrop {
   position: fixed;
   inset: 0;
@@ -1180,6 +1197,11 @@ textarea {
     min-width: 1180px;
   }
 
+  .qso-list-table--contest .qso-list-table__head,
+  .qso-list-table--contest .qso-list-table__row {
+    min-width: 900px;
+  }
+
   .settings-grid {
     grid-template-columns: 1fr;
   }
@@ -1204,6 +1226,10 @@ textarea {
 
   .grid--zones {
     grid-template-columns: repeat(3, minmax(72px, 1fr)) max-content max-content;
+  }
+
+  .grid--contest-entry {
+    grid-template-columns: minmax(110px, 1.2fr) 62px 78px minmax(120px, 1fr);
   }
 
   .grid--time {
@@ -1304,6 +1330,8 @@ textarea {
 
   .grid--top,
   .grid--callsign,
+  .grid--contest,
+  .grid--contest-entry,
   .grid--geo,
   .grid--mid,
   .grid--zones,
