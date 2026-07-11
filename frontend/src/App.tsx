@@ -23,6 +23,7 @@ import {
   updateNote,
 } from './api';
 import type {
+  CallsignAutofill,
   ClubMembership,
   DxccData,
   LogEntryListItem,
@@ -163,6 +164,9 @@ type ContestLookupState = {
   message: string;
   recentQsos: RecentQso[];
   recentQsoCount: number;
+  autofill: CallsignAutofill | null;
+  clubs: ClubMembership[];
+  dxccData: DxccData | null;
 };
 
 type ContestSettings = {
@@ -519,6 +523,18 @@ function readInitialContestSettings(): ContestSettings {
   } catch {
     return DEFAULT_CONTEST_SETTINGS;
   }
+}
+
+function createIdleContestLookupState(): ContestLookupState {
+  return {
+    status: 'idle',
+    message: 'Leave the Call field to check previous QSOs.',
+    recentQsos: [],
+    recentQsoCount: 0,
+    autofill: null,
+    clubs: [],
+    dxccData: null,
+  };
 }
 
 function defaultRstForMode(mode: string): string {
@@ -956,12 +972,7 @@ export default function App() {
       msgReceived: '',
     };
   });
-  const [contestLookup, setContestLookup] = useState<ContestLookupState>({
-    status: 'idle',
-    message: 'Leave the Call field to check previous QSOs.',
-    recentQsos: [],
-    recentQsoCount: 0,
-  });
+  const [contestLookup, setContestLookup] = useState<ContestLookupState>(() => createIdleContestLookupState());
   const [contestLookupCallsign, setContestLookupCallsign] = useState('');
   const [contestQsoList, setContestQsoList] = useState<QsoListState>({
     status: 'idle',
@@ -1481,12 +1492,7 @@ export default function App() {
 
   useEffect(() => {
     if (contestLookupCallsign === '') {
-      setContestLookup({
-        status: 'idle',
-        message: 'Leave the Call field to check previous QSOs.',
-        recentQsos: [],
-        recentQsoCount: 0,
-      });
+      setContestLookup(createIdleContestLookupState());
 
       return undefined;
     }
@@ -1501,34 +1507,43 @@ export default function App() {
     }));
 
     const timeoutId = window.setTimeout(async () => {
-      try {
-        const context = await getCallsignContext(contestLookupCallsign, form.qsoDate || undefined);
+      const [contextResult, dxccResult] = await Promise.allSettled([
+        getCallsignContext(contestLookupCallsign, form.qsoDate || undefined),
+        getDxcc(contestLookupCallsign),
+      ]);
 
-        if (contestLookupKeyRef.current !== currentLookupKey) {
-          return;
-        }
+      if (contestLookupKeyRef.current !== currentLookupKey) {
+        return;
+      }
 
-        setContestLookup({
-          status: 'ready',
-          message:
-            context.recentQsoCount > 0
-              ? `Found ${context.recentQsoCount} previous QSO(s) with ${context.callsign}.`
-              : `No previous QSO with ${context.callsign}.`,
-          recentQsos: context.recentQsos,
-          recentQsoCount: context.recentQsoCount,
-        });
-      } catch (error) {
-        if (contestLookupKeyRef.current !== currentLookupKey) {
-          return;
-        }
+      const dxccData = dxccResult.status === 'fulfilled' ? dxccResult.value : null;
+
+      if (contextResult.status === 'rejected') {
+        const error = contextResult.reason;
 
         setContestLookup({
+          ...createIdleContestLookupState(),
           status: 'error',
           message: error instanceof Error ? error.message : 'Unable to check previous QSOs.',
-          recentQsos: [],
-          recentQsoCount: 0,
+          dxccData,
         });
+        return;
       }
+
+      const context = contextResult.value;
+
+      setContestLookup({
+        status: 'ready',
+        message:
+          context.recentQsoCount > 0
+            ? `Found ${context.recentQsoCount} previous QSO(s) with ${context.callsign}.`
+            : `No previous QSO with ${context.callsign}.`,
+        recentQsos: context.recentQsos,
+        recentQsoCount: context.recentQsoCount,
+        autofill: context.autofill,
+        clubs: context.clubs,
+        dxccData,
+      });
     }, 250);
 
     return () => window.clearTimeout(timeoutId);
@@ -1975,12 +1990,7 @@ export default function App() {
       serialReceived: '',
       msgReceived: '',
     }));
-    setContestLookup({
-      status: 'idle',
-      message: 'Leave the Call field to check previous QSOs.',
-      recentQsos: [],
-      recentQsoCount: 0,
-    });
+    setContestLookup(createIdleContestLookupState());
     setContestLookupCallsign('');
     setContestSubmitState({
       status: 'idle',
@@ -2435,6 +2445,33 @@ export default function App() {
     });
 
     try {
+      const normalizedContestCallsign = contestForm.callsign.trim().toUpperCase();
+      let autofill: CallsignAutofill | null = null;
+      let clubs: ClubMembership[] = [];
+      let dxccData: DxccData | null = null;
+
+      if (contestLookup.status === 'ready' && contestLookupCallsign === normalizedContestCallsign) {
+        autofill = contestLookup.autofill;
+        clubs = contestLookup.clubs;
+        dxccData = contestLookup.dxccData;
+      } else {
+        const [contextResult, dxccResult] = await Promise.allSettled([
+          getCallsignContext(normalizedContestCallsign, form.qsoDate || undefined),
+          getDxcc(normalizedContestCallsign),
+        ]);
+
+        if (contextResult.status === 'fulfilled') {
+          autofill = contextResult.value.autofill;
+          clubs = contextResult.value.clubs;
+        }
+
+        if (dxccResult.status === 'fulfilled') {
+          dxccData = dxccResult.value;
+        }
+      }
+
+      const clubNumbers = new Map(clubs.map((club) => [club.slot, club.number]));
+
       const payload: LogEntryPayload = {
         qsoDate: form.qsoDate,
         timeOn: form.timeOn,
@@ -2451,6 +2488,23 @@ export default function App() {
         stxString: normalizeOptionalString(contestForm.msgSent),
         srxString: normalizeOptionalString(contestForm.msgReceived),
         contestName: normalizeOptionalString(contestName),
+        name: autofill?.name ?? null,
+        qth: autofill?.qth ?? null,
+        grid: autofill?.grid ?? null,
+        state: autofill?.state ?? null,
+        county: autofill?.county ?? null,
+        award: autofill?.award ?? null,
+        qslVia: autofill?.qslVia ?? null,
+        iota: autofill?.iota ?? null,
+        waz: dxccData?.waz ?? autofill?.waz ?? null,
+        itu: dxccData?.itu ?? autofill?.itu ?? null,
+        adif: dxccData?.adif ?? null,
+        continent: dxccData?.continent ?? null,
+        clubNumber1: clubNumbers.get(1) ?? null,
+        clubNumber2: clubNumbers.get(2) ?? null,
+        clubNumber3: clubNumbers.get(3) ?? null,
+        clubNumber4: clubNumbers.get(4) ?? null,
+        clubNumber5: clubNumbers.get(5) ?? null,
         profileId: settings.defaultProfileId,
       };
 
@@ -2465,12 +2519,7 @@ export default function App() {
         serialReceived: '',
         msgReceived: '',
       }));
-      setContestLookup({
-        status: 'idle',
-        message: 'Leave the Call field to check previous QSOs.',
-        recentQsos: [],
-        recentQsoCount: 0,
-      });
+      setContestLookup(createIdleContestLookupState());
       setContestLookupCallsign('');
       setContestQsoReloadKey((current) => current + 1);
       setContestSubmitState({
@@ -3315,12 +3364,7 @@ export default function App() {
                 value={contestForm.callsign}
                 onChange={(event) => {
                   updateContestField('callsign', normalizeCallsignInput(event.target.value));
-                  setContestLookup({
-                    status: 'idle',
-                    message: 'Leave the Call field to check previous QSOs.',
-                    recentQsos: [],
-                    recentQsoCount: 0,
-                  });
+                  setContestLookup(createIdleContestLookupState());
                   setContestLookupCallsign('');
                 }}
                 onBlur={() => setContestLookupCallsign(contestForm.callsign.trim().toUpperCase())}
