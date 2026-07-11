@@ -3283,7 +3283,7 @@ export default function App() {
             </div>
           </section>
 
-          <section>
+          <section className="contest-log">
             <header className="list-header">
               <div>
                 <h2 className="list-header__title">Contest QSOs</h2>

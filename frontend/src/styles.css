@@ -249,6 +249,10 @@ textarea {
   gap: 0.55rem;
 }
 
+.contest-log {
+  min-width: 0;
+}
+
 .grid--contest {
   grid-template-columns: minmax(200px, 1fr) max-content;
   gap: 0.55rem;
@@ -1232,6 +1236,10 @@ textarea {
     grid-template-columns: minmax(110px, 1.2fr) 62px 78px minmax(120px, 1fr);
   }
 
+  .grid--contest-entry > .field:nth-child(5) {
+    grid-column: 2;
+  }
+
   .grid--time {
     grid-template-columns: minmax(150px, 1fr) 108px 108px max-content;
     gap: 0.4rem;
@@ -1326,6 +1334,10 @@ textarea {
   .settings-header,
   .setting-row {
     align-items: flex-start;
+  }
+
+  .grid--contest-entry > .field:nth-child(5) {
+    grid-column: auto;
   }
 
   .grid--top,
