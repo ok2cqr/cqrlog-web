@@ -3106,21 +3106,9 @@ export default function App() {
         <form className="panel" onSubmit={handleContestSubmit}>
           <section className="topbar">
             <div className="topbar__dxcc">
-              <span className="meta-strip__label">
-                <span>Contest</span>
-                {radioSyncState !== 'idle' ? (
-                  <span
-                    className={`field__status field__status--${radioSyncState}`}
-                    aria-hidden="true"
-                    title={radioSyncState === 'online' ? 'Radio sync online' : 'Radio sync offline'}
-                  />
-                ) : null}
-              </span>
+              <span className="meta-strip__label">Contest</span>
               <p className="topbar__line">
-                {form.frequency} MHz · {form.band} · {form.mode} · {form.power} W
-              </p>
-              <p className="topbar__subtle">
-                {form.qsoDate} {form.timeOn} — band, mode and frequency follow the QSO entry form.
+                {form.qsoDate} {form.timeOn}
               </p>
             </div>
 
@@ -3136,6 +3124,79 @@ export default function App() {
                 <span className="visually-hidden">{contestSubmitState.status === 'saving' ? 'Saving QSO' : 'Save QSO'}</span>
               </button>
             </div>
+          </section>
+
+          <section className="grid grid--top">
+            <label className="field field--wide">
+              <span className="field__label">
+                <span>Freq</span>
+                {radioSyncState !== 'idle' ? (
+                  <span
+                    className={`field__status field__status--${radioSyncState}`}
+                    aria-hidden="true"
+                    title={radioSyncState === 'online' ? 'Radio sync online' : 'Radio sync offline'}
+                  />
+                ) : null}
+              </span>
+              <input
+                value={form.frequency}
+                onChange={(event) => {
+                  const nextValue = normalizeCzechNumberRow(event.target.value);
+                  const derivedBand = getBandFromFrequency(nextValue);
+
+                  setForm((current) => ({
+                    ...current,
+                    frequency: nextValue,
+                    band: derivedBand ?? current.band,
+                  }));
+                }}
+                onBlur={() => updateField('frequency', formatFrequencyInputValue(form.frequency))}
+                inputMode="decimal"
+                required
+              />
+            </label>
+
+            <label className="field">
+              <span>Band</span>
+              <select
+                value={form.band}
+                onChange={(event) => {
+                  const nextBand = event.target.value;
+
+                  setForm((current) => ({
+                    ...current,
+                    band: nextBand,
+                    frequency: defaultFrequencyByBand[nextBand] ?? current.frequency,
+                  }));
+                }}
+              >
+                {bandOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span>Mode</span>
+              <select value={form.mode} onChange={(event) => updateField('mode', event.target.value)}>
+                {modeOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span>Pwr(W)</span>
+              <input
+                value={form.power}
+                onChange={(event) => updateField('power', normalizeDigitsOnly(event.target.value))}
+                inputMode="numeric"
+              />
+            </label>
           </section>
 
           <section className="grid grid--contest">
