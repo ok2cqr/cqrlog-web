@@ -160,6 +160,77 @@ final class LogEntryControllerTest extends WebTestCase
     }
 
     #[Test]
+    public function listFiltersByContestName(): void
+    {
+        $firstContestId = $this->insertLogEntry([
+            'qsodate' => '2026-03-14',
+            'time_on' => '08:00',
+            'callsign' => 'OK1AAA',
+            'freq' => 7.0740,
+            'mode' => 'CW',
+            'contestname' => 'CQ WW 2026',
+        ]);
+        $secondContestId = $this->insertLogEntry([
+            'qsodate' => '2026-03-15',
+            'time_on' => '08:00',
+            'callsign' => 'OK2BBB',
+            'freq' => 7.0740,
+            'mode' => 'CW',
+            'contestname' => 'CQ WW 2026',
+        ]);
+        $this->insertLogEntry([
+            'qsodate' => '2026-03-16',
+            'time_on' => '08:00',
+            'callsign' => 'OK3CCC',
+            'freq' => 7.0740,
+            'mode' => 'CW',
+            'contestname' => 'ARRL DX',
+        ]);
+        $this->insertLogEntry([
+            'qsodate' => '2026-03-17',
+            'time_on' => '08:00',
+            'callsign' => 'OK4DDD',
+            'freq' => 7.0740,
+            'mode' => 'CW',
+        ]);
+
+        $this->client->request('GET', '/api/logEntries?contestName=' . rawurlencode('CQ WW 2026'));
+
+        self::assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        /** @var array{items: list<array<string, mixed>>, totalCount: int} $payload */
+        $payload = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(2, $payload['totalCount']);
+        self::assertSame([$secondContestId, $firstContestId], array_column($payload['items'], 'id'));
+        self::assertSame('CQ WW 2026', $payload['items'][0]['contestName']);
+
+        $this->client->request('GET', '/api/logEntries?contestName=' . rawurlencode('CQ WW 2026') . '&callsign=OK1');
+
+        self::assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        /** @var array{items: list<array<string, mixed>>, totalCount: int} $combined */
+        $combined = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(1, $combined['totalCount']);
+        self::assertSame($firstContestId, $combined['items'][0]['id']);
+    }
+
+    #[Test]
+    public function listRejectsTooLongContestName(): void
+    {
+        $this->client->request('GET', '/api/logEntries?contestName=' . str_repeat('A', 41));
+
+        self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        /** @var array<string, mixed> $payload */
+        $payload = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame('validation_failed', $payload['error']['code']);
+        self::assertSame(['This field must be at most 40 characters long.'], $payload['error']['details']['fields']['contestName']);
+    }
+
+    #[Test]
     public function listSupportsSorting(): void
     {
         $alphaId = $this->insertLogEntry([

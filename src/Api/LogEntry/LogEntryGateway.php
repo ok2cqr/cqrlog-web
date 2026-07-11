@@ -181,6 +181,11 @@ final readonly class LogEntryGateway
             $params[] = '%' . $query->callsign . '%';
         }
 
+        if ($query->contestName !== null) {
+            $clauses[] = 'contestname = %s';
+            $params[] = $query->contestName;
+        }
+
         if ($query->qsoDateFrom !== null) {
             $clauses[] = 'qsodate >= %s';
             $params[] = $query->qsoDateFrom;

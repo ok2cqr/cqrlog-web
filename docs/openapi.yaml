@@ -324,6 +324,13 @@ paths:
             type: string
             maxLength: 20
           description: Case-insensitive partial match.
+        - name: contestName
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 40
+          description: Exact match on the contest name stored with the QSO.
         - name: qsoDateFrom
           in: query
           required: false

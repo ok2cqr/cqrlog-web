@@ -424,6 +424,7 @@ Supported query parameters:
 - `page`: default `1`
 - `perPage`: default `50`, max `100`
 - `callsign`: case-insensitive partial match
+- `contestName`: exact match, max `40` characters
 - `qsoDateFrom`: inclusive lower bound in `Y-m-d`
 - `qsoDateTo`: inclusive upper bound in `Y-m-d`
 - `sortBy`: one of `qsoDate`, `callsign`, `frequency`, `mode`, `id`, default `qsoDate`

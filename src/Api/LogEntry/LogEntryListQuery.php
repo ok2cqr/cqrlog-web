@@ -30,6 +30,7 @@ final readonly class LogEntryListQuery
         public int $page,
         public int $perPage,
         public ?string $callsign,
+        public ?string $contestName,
         public ?string $qsoDateFrom,
         public ?string $qsoDateTo,
         public string $sortBy,
@@ -52,6 +53,7 @@ final readonly class LogEntryListQuery
         }
 
         $callsign = self::normalizeOptionalString($query, 'callsign', 20, true, $fieldErrors);
+        $contestName = self::normalizeOptionalString($query, 'contestName', 40, false, $fieldErrors);
         $qsoDateFrom = self::normalizeOptionalDate($query, 'qsoDateFrom', $fieldErrors);
         $qsoDateTo = self::normalizeOptionalDate($query, 'qsoDateTo', $fieldErrors);
         $sortBy = self::normalizeSortBy($query, $fieldErrors);
@@ -73,6 +75,7 @@ final readonly class LogEntryListQuery
             page: $page,
             perPage: $perPage,
             callsign: $callsign,
+            contestName: $contestName,
             qsoDateFrom: $qsoDateFrom,
             qsoDateTo: $qsoDateTo,
             sortBy: $sortBy,
