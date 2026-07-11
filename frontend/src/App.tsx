@@ -284,6 +284,15 @@ const ENTRY_ARROW_NAV_ORDER: EntryArrowField[] = [
   'qslSent',
   'qslReceived',
 ];
+type ContestArrowField = 'callsign' | 'serialSent' | 'msgSent' | 'serialReceived' | 'msgReceived';
+
+const CONTEST_ARROW_NAV_ORDER: ContestArrowField[] = [
+  'callsign',
+  'serialSent',
+  'msgSent',
+  'serialReceived',
+  'msgReceived',
+];
 const DX_CLUSTER_URL = 'https://www.hamqth.com/dxc_csv.php?limit=10';
 const DX_CLUSTER_POLL_INTERVAL_MS = 20_000;
 const defaultFrequencyByBand: Record<string, string> = {
@@ -1006,6 +1015,7 @@ export default function App() {
   const editDxccLookupKeyRef = useRef<string>('');
   const contestCallsignInputRef = useRef<HTMLInputElement | null>(null);
   const contestLookupKeyRef = useRef<string>('');
+  const contestArrowFieldRefs = useRef<Partial<Record<ContestArrowField, HTMLInputElement | null>>>({});
   const selectableProfiles = settings.showHiddenProfiles
     ? profiles.items
     : profiles.items.filter((profile) => profile.visible);
@@ -1043,9 +1053,15 @@ export default function App() {
   }, [viewMode]);
 
   useEffect(() => {
-    if (viewMode !== 'entry' || profileDialog.status !== 'closed' || editDialog.status !== 'closed') {
+    if (
+      (viewMode !== 'entry' && viewMode !== 'contest')
+      || profileDialog.status !== 'closed'
+      || editDialog.status !== 'closed'
+    ) {
       return undefined;
     }
+
+    const clearActiveForm = viewMode === 'contest' ? resetContestEntry : resetEntryForm;
 
     const handleWindowKeyDown = (event: KeyboardEvent) => {
       if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.repeat) {
@@ -1059,7 +1075,7 @@ export default function App() {
           lastEscapeAtRef.current = 0;
           lastBackslashAtRef.current = 0;
           event.preventDefault();
-          resetEntryForm();
+          clearActiveForm();
           return;
         }
 
@@ -1073,7 +1089,7 @@ export default function App() {
           lastBackslashAtRef.current = 0;
           lastEscapeAtRef.current = 0;
           event.preventDefault();
-          resetEntryForm();
+          clearActiveForm();
           return;
         }
 
@@ -1907,6 +1923,74 @@ export default function App() {
       ...current,
       [field]: value,
     }));
+  }
+
+  function setContestArrowFieldRef(field: ContestArrowField, element: HTMLInputElement | null): void {
+    contestArrowFieldRefs.current[field] = element;
+  }
+
+  function handleContestArrowNavigation(
+    field: ContestArrowField,
+  ): (event: ReactKeyboardEvent<HTMLInputElement>) => void {
+    return (event) => {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+        return;
+      }
+
+      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') {
+        return;
+      }
+
+      const currentIndex = CONTEST_ARROW_NAV_ORDER.indexOf(field);
+
+      if (currentIndex === -1) {
+        return;
+      }
+
+      const nextIndex = event.key === 'ArrowDown' ? currentIndex + 1 : currentIndex - 1;
+
+      if (nextIndex < 0 || nextIndex >= CONTEST_ARROW_NAV_ORDER.length) {
+        return;
+      }
+
+      const nextElement = contestArrowFieldRefs.current[CONTEST_ARROW_NAV_ORDER[nextIndex]];
+
+      if (!nextElement) {
+        return;
+      }
+
+      event.preventDefault();
+      window.requestAnimationFrame(() => {
+        nextElement.focus();
+        nextElement.select();
+      });
+    };
+  }
+
+  function resetContestEntry(): void {
+    setContestForm((current) => ({
+      ...current,
+      callsign: '',
+      rstSent: defaultRstForMode(form.mode),
+      rstReceived: defaultRstForMode(form.mode),
+      serialReceived: '',
+      msgReceived: '',
+    }));
+    setContestLookup({
+      status: 'idle',
+      message: 'Leave the Call field to check previous QSOs.',
+      recentQsos: [],
+      recentQsoCount: 0,
+    });
+    setContestLookupCallsign('');
+    setContestSubmitState({
+      status: 'idle',
+      message: '',
+    });
+
+    window.requestAnimationFrame(() => {
+      contestCallsignInputRef.current?.focus();
+    });
   }
 
   function updateSetting<K extends keyof FrontendSettings>(key: K, value: FrontendSettings[K]): void {
@@ -3224,7 +3308,11 @@ export default function App() {
             <label className="field">
               <span>Call</span>
               <input
-                ref={contestCallsignInputRef}
+                ref={(element) => {
+                  contestCallsignInputRef.current = element;
+                  setContestArrowFieldRef('callsign', element);
+                }}
+                onKeyDown={handleContestArrowNavigation('callsign')}
                 value={contestForm.callsign}
                 onChange={(event) => {
                   updateContestField('callsign', normalizeCallsignInput(event.target.value));
@@ -3244,6 +3332,8 @@ export default function App() {
             <label className="field">
               <span>NR s</span>
               <input
+                ref={(element) => setContestArrowFieldRef('serialSent', element)}
+                onKeyDown={handleContestArrowNavigation('serialSent')}
                 value={contestForm.serialSent}
                 onChange={(event) => updateContestField('serialSent', normalizeCzechNumberRow(event.target.value))}
                 maxLength={6}
@@ -3253,6 +3343,8 @@ export default function App() {
             <label className="field">
               <span>MSG s</span>
               <input
+                ref={(element) => setContestArrowFieldRef('msgSent', element)}
+                onKeyDown={handleContestArrowNavigation('msgSent')}
                 value={contestForm.msgSent}
                 onChange={(event) => updateContestField('msgSent', event.target.value)}
                 maxLength={50}
@@ -3262,6 +3354,8 @@ export default function App() {
             <label className="field">
               <span>NR r</span>
               <input
+                ref={(element) => setContestArrowFieldRef('serialReceived', element)}
+                onKeyDown={handleContestArrowNavigation('serialReceived')}
                 value={contestForm.serialReceived}
                 onChange={(event) => updateContestField('serialReceived', normalizeCzechNumberRow(event.target.value))}
                 maxLength={6}
@@ -3271,6 +3365,8 @@ export default function App() {
             <label className="field">
               <span>MSG r</span>
               <input
+                ref={(element) => setContestArrowFieldRef('msgReceived', element)}
+                onKeyDown={handleContestArrowNavigation('msgReceived')}
                 value={contestForm.msgReceived}
                 onChange={(event) => updateContestField('msgReceived', event.target.value)}
                 maxLength={50}
