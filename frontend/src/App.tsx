@@ -88,6 +88,7 @@ type FrontendSettings = {
   theme: ThemePreference;
   defaultProfileId: number | null;
   showHiddenProfiles: boolean;
+  showContestClubs: boolean;
 };
 
 type RadioSyncConfig = {
@@ -259,6 +260,7 @@ const DEFAULT_FRONTEND_SETTINGS: FrontendSettings = {
   theme: 'auto',
   defaultProfileId: null,
   showHiddenProfiles: false,
+  showContestClubs: false,
 };
 
 const bandOptions = ['160M', '80M', '60M', '40M', '30M', '20M', '17M', '15M', '12M', '10M', '6M', '2M'];
@@ -482,6 +484,10 @@ function readInitialFrontendSettingsState(): InitialFrontendSettingsState {
           typeof parsed.showHiddenProfiles === 'boolean'
             ? parsed.showHiddenProfiles
             : DEFAULT_FRONTEND_SETTINGS.showHiddenProfiles,
+        showContestClubs:
+          typeof parsed.showContestClubs === 'boolean'
+            ? parsed.showContestClubs
+            : DEFAULT_FRONTEND_SETTINGS.showContestClubs,
       },
     };
   } catch {
@@ -1507,43 +1513,52 @@ export default function App() {
     }));
 
     const timeoutId = window.setTimeout(async () => {
-      const [contextResult, dxccResult] = await Promise.allSettled([
-        getCallsignContext(contestLookupCallsign, form.qsoDate || undefined),
-        getDxcc(contestLookupCallsign),
-      ]);
+      void getDxcc(contestLookupCallsign)
+        .then((dxccData) => {
+          if (contestLookupKeyRef.current !== currentLookupKey) {
+            return;
+          }
 
-      if (contestLookupKeyRef.current !== currentLookupKey) {
-        return;
-      }
+          setContestLookup((current) => ({
+            ...current,
+            dxccData,
+          }));
+        })
+        .catch(() => {
+          // DXCC enrichment is best-effort — saving must work without it.
+        });
 
-      const dxccData = dxccResult.status === 'fulfilled' ? dxccResult.value : null;
+      try {
+        const context = await getCallsignContext(contestLookupCallsign, form.qsoDate || undefined);
 
-      if (contextResult.status === 'rejected') {
-        const error = contextResult.reason;
+        if (contestLookupKeyRef.current !== currentLookupKey) {
+          return;
+        }
 
-        setContestLookup({
+        setContestLookup((current) => ({
+          ...current,
+          status: 'ready',
+          message:
+            context.recentQsoCount > 0
+              ? `Found ${context.recentQsoCount} previous QSO(s) with ${context.callsign}.`
+              : `No previous QSO with ${context.callsign}.`,
+          recentQsos: context.recentQsos,
+          recentQsoCount: context.recentQsoCount,
+          autofill: context.autofill,
+          clubs: context.clubs,
+        }));
+      } catch (error) {
+        if (contestLookupKeyRef.current !== currentLookupKey) {
+          return;
+        }
+
+        setContestLookup((current) => ({
           ...createIdleContestLookupState(),
           status: 'error',
           message: error instanceof Error ? error.message : 'Unable to check previous QSOs.',
-          dxccData,
-        });
-        return;
+          dxccData: current.dxccData,
+        }));
       }
-
-      const context = contextResult.value;
-
-      setContestLookup({
-        status: 'ready',
-        message:
-          context.recentQsoCount > 0
-            ? `Found ${context.recentQsoCount} previous QSO(s) with ${context.callsign}.`
-            : `No previous QSO with ${context.callsign}.`,
-        recentQsos: context.recentQsos,
-        recentQsoCount: context.recentQsoCount,
-        autofill: context.autofill,
-        clubs: context.clubs,
-        dxccData,
-      });
     }, 250);
 
     return () => window.clearTimeout(timeoutId);
@@ -3429,6 +3444,23 @@ export default function App() {
             </p>
           ) : null}
 
+          {settings.showContestClubs ? (
+            <article className="info-card info-card--club">
+              <span className="meta-strip__label">Club</span>
+              {contestLookup.clubs.length > 0 ? (
+                <div className="club-list">
+                  {contestLookup.clubs.map((club) => (
+                    <span key={`${club.slot}-${club.number}`} className="club-pill">
+                      {club.name}: {club.number}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="meta-strip__empty">No club memberships resolved yet.</p>
+              )}
+            </article>
+          ) : null}
+
           <section className="history-panel">
             <div className="history-panel__header">
               <span className="meta-strip__label">Previous QSO</span>
@@ -4098,6 +4130,28 @@ export default function App() {
                     <option value="light">Light</option>
                     <option value="dark">Dark</option>
                   </select>
+                </label>
+              </section>
+
+              <section className="settings-card">
+                <div className="settings-card__header">
+                  <h3 className="settings-card__title">Contest</h3>
+                  <p className="settings-card__subtle">Options for the contest logging view.</p>
+                </div>
+
+                <label className="setting-row">
+                  <div>
+                    <span className="setting-row__title">Show club memberships</span>
+                    <p className="setting-row__description">Display club memberships of the entered callsign in the contest view.</p>
+                  </div>
+                  <span className="setting-toggle">
+                    <input
+                      type="checkbox"
+                      checked={settings.showContestClubs}
+                      onChange={(event) => updateSetting('showContestClubs', event.target.checked)}
+                    />
+                    <span>{settings.showContestClubs ? 'On' : 'Off'}</span>
+                  </span>
                 </label>
               </section>
 
