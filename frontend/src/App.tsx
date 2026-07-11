@@ -3180,16 +3180,6 @@ export default function App() {
               />
             </label>
 
-            <label className="field field--rst">
-              <span>RST s</span>
-              <input
-                value={contestForm.rstSent}
-                onChange={(event) => updateContestField('rstSent', normalizeCzechNumberRow(event.target.value))}
-                onFocus={(event) => selectRstEditableCharacter(event.currentTarget)}
-                maxLength={5}
-              />
-            </label>
-
             <label className="field">
               <span>NR s</span>
               <input
@@ -3205,16 +3195,6 @@ export default function App() {
                 value={contestForm.msgSent}
                 onChange={(event) => updateContestField('msgSent', event.target.value)}
                 maxLength={50}
-              />
-            </label>
-
-            <label className="field field--rst">
-              <span>RST r</span>
-              <input
-                value={contestForm.rstReceived}
-                onChange={(event) => updateContestField('rstReceived', normalizeCzechNumberRow(event.target.value))}
-                onFocus={(event) => selectRstEditableCharacter(event.currentTarget)}
-                maxLength={5}
               />
             </label>
 
@@ -3300,10 +3280,8 @@ export default function App() {
                 <span>QSO Date</span>
                 <span>Time</span>
                 <span>Callsign</span>
-                <span>RST s</span>
                 <span>NR s</span>
                 <span>MSG s</span>
-                <span>RST r</span>
                 <span>NR r</span>
                 <span>MSG r</span>
                 <span>Band</span>
@@ -3316,10 +3294,8 @@ export default function App() {
                     <span>{item.qsoDate}</span>
                     <span>{item.timeOn}</span>
                     <span>{item.callsign}</span>
-                    <span>{item.rstSent ?? '-'}</span>
                     <span>{item.stx ?? '-'}</span>
                     <span>{item.stxString ?? '-'}</span>
-                    <span>{item.rstReceived ?? '-'}</span>
                     <span>{item.srx ?? '-'}</span>
                     <span>{item.srxString ?? '-'}</span>
                     <span>{item.band ?? '-'}</span>

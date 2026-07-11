@@ -260,7 +260,7 @@ textarea {
 }
 
 .grid--contest-entry {
-  grid-template-columns: minmax(130px, 1.3fr) 70px 90px 1fr 70px 90px 1fr;
+  grid-template-columns: minmax(130px, 1.3fr) 90px 1fr 90px 1fr;
   gap: 0.55rem;
 }
 
@@ -905,7 +905,7 @@ textarea {
 
 .qso-list-table--contest .qso-list-table__head,
 .qso-list-table--contest .qso-list-table__row {
-  grid-template-columns: 96px 70px minmax(110px, 1.2fr) 62px 70px minmax(80px, 1fr) 62px 70px minmax(80px, 1fr) 64px 70px;
+  grid-template-columns: 96px 70px minmax(110px, 1.2fr) 70px minmax(80px, 1fr) 70px minmax(80px, 1fr) 64px 70px;
 }
 
 .dialog-backdrop {
@@ -1203,7 +1203,7 @@ textarea {
 
   .qso-list-table--contest .qso-list-table__head,
   .qso-list-table--contest .qso-list-table__row {
-    min-width: 900px;
+    min-width: 720px;
   }
 
   .settings-grid {
@@ -1233,10 +1233,10 @@ textarea {
   }
 
   .grid--contest-entry {
-    grid-template-columns: minmax(110px, 1.2fr) 62px 78px minmax(120px, 1fr);
+    grid-template-columns: minmax(130px, 1.4fr) 78px minmax(120px, 1fr);
   }
 
-  .grid--contest-entry > .field:nth-child(5) {
+  .grid--contest-entry > .field:nth-child(4) {
     grid-column: 2;
   }
 
@@ -1336,7 +1336,7 @@ textarea {
     align-items: flex-start;
   }
 
-  .grid--contest-entry > .field:nth-child(5) {
+  .grid--contest-entry > .field:nth-child(4) {
     grid-column: auto;
   }
 
