@@ -289,7 +289,6 @@ type ContestArrowField = 'callsign' | 'serialSent' | 'msgSent' | 'serialReceived
 const CONTEST_ARROW_NAV_ORDER: ContestArrowField[] = [
   'callsign',
   'serialSent',
-  'msgSent',
   'serialReceived',
   'msgReceived',
 ];
