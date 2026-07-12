@@ -3481,7 +3481,7 @@ export default function App() {
                 ref={(element) => setContestArrowFieldRef('msgSent', element)}
                 onKeyDown={handleContestArrowNavigation('msgSent')}
                 value={contestForm.msgSent}
-                onChange={(event) => updateContestField('msgSent', event.target.value)}
+                onChange={(event) => updateContestField('msgSent', normalizeCzechNumberRow(event.target.value).toUpperCase())}
                 maxLength={50}
                 tabIndex={-1}
               />
@@ -3504,7 +3504,7 @@ export default function App() {
                 ref={(element) => setContestArrowFieldRef('msgReceived', element)}
                 onKeyDown={handleContestArrowNavigation('msgReceived')}
                 value={contestForm.msgReceived}
-                onChange={(event) => updateContestField('msgReceived', event.target.value)}
+                onChange={(event) => updateContestField('msgReceived', normalizeCzechNumberRow(event.target.value).toUpperCase())}
                 maxLength={50}
               />
             </label>
