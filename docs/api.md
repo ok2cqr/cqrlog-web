@@ -29,6 +29,7 @@ Implemented endpoints:
 - `GET /api/logEntries/{id}`
 - `POST /api/logEntries`
 - `PATCH /api/logEntries/{id}`
+- `DELETE /api/logEntries/{id}`
 
 ## Common Behavior
 
@@ -598,6 +599,11 @@ Validation:
 ### `PATCH /api/logEntries/{id}`
 
 All fields are optional. Sending `null` clears nullable string fields such as `timeOff`, `remarks`, `qslVia` or `myLocator`.
+
+### `DELETE /api/logEntries/{id}`
+
+Deletes the log entry. Returns `204 No Content` on success, `404` with the
+standard error shape when the entry does not exist.
 
 ## OpenAPI
 

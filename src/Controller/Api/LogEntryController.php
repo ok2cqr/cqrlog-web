@@ -84,4 +84,16 @@ final class LogEntryController extends AbstractController
 
         return $this->json($this->mapper->map($row)->toArray());
     }
+
+    #[Route('/{id<\d+>}', name: 'delete', methods: ['DELETE'])]
+    public function delete(int $id): JsonResponse
+    {
+        if ($this->gateway->fetchById($id) === null) {
+            throw new ResourceNotFoundException('Log entry', $id);
+        }
+
+        $this->gateway->delete($id);
+
+        return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
 }

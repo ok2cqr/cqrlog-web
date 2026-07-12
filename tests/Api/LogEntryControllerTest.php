@@ -231,6 +231,43 @@ final class LogEntryControllerTest extends WebTestCase
     }
 
     #[Test]
+    public function deleteRemovesLogEntry(): void
+    {
+        $id = $this->insertLogEntry([
+            'qsodate' => '2026-03-16',
+            'time_on' => '10:00',
+            'callsign' => 'OK1DEL',
+            'freq' => 7.0740,
+            'mode' => 'CW',
+        ]);
+
+        $this->client->request('DELETE', sprintf('/api/logEntries/%d', $id));
+
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+        self::assertSame('', $this->client->getResponse()->getContent());
+
+        $row = $this->connection->fetch(
+            'SELECT id_cqrlog_main FROM cqrlog_main WHERE id_cqrlog_main = %i',
+            $id,
+        );
+
+        self::assertNull($row);
+    }
+
+    #[Test]
+    public function deleteReturnsNotFoundForUnknownLogEntry(): void
+    {
+        $this->client->request('DELETE', '/api/logEntries/999999');
+
+        self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+
+        /** @var array<string, mixed> $payload */
+        $payload = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame('not_found', $payload['error']['code']);
+    }
+
+    #[Test]
     public function listSupportsSorting(): void
     {
         $alphaId = $this->insertLogEntry([

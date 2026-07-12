@@ -424,6 +424,15 @@ paths:
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [LogEntries]
+      summary: Delete log entry
+      operationId: deleteLogEntry
+      responses:
+        '204':
+          description: Log entry deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   parameters:
     IdPath:

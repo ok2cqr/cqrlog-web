@@ -141,6 +141,14 @@ final readonly class LogEntryGateway
         return $this->fetchById($id);
     }
 
+    public function delete(int $id): void
+    {
+        $this->connection
+            ->delete('cqrlog_main')
+            ->where('id_cqrlog_main = %i', $id)
+            ->execute();
+    }
+
     /**
      * @return array<string, int|float|string>
      */
