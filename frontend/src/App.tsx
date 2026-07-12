@@ -1980,7 +1980,9 @@ export default function App() {
         return;
       }
 
-      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') {
+      const isCallsignSpace = event.key === ' ' && field === 'callsign';
+
+      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp' && !isCallsignSpace) {
         return;
       }
 
@@ -1990,7 +1992,7 @@ export default function App() {
         return;
       }
 
-      const nextIndex = event.key === 'ArrowDown' ? currentIndex + 1 : currentIndex - 1;
+      const nextIndex = event.key === 'ArrowUp' ? currentIndex - 1 : currentIndex + 1;
 
       if (nextIndex < 0 || nextIndex >= CONTEST_ARROW_NAV_ORDER.length) {
         return;
