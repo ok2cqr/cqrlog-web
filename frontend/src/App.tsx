@@ -295,7 +295,6 @@ type ContestArrowField = 'callsign' | 'serialSent' | 'msgSent' | 'serialReceived
 
 const CONTEST_ARROW_NAV_ORDER: ContestArrowField[] = [
   'callsign',
-  'serialSent',
   'serialReceived',
   'msgReceived',
 ];
@@ -3431,6 +3430,7 @@ export default function App() {
                 value={contestForm.serialSent}
                 onChange={(event) => updateContestField('serialSent', normalizeCzechNumberRow(event.target.value))}
                 maxLength={6}
+                tabIndex={-1}
               />
             </label>
 
@@ -3442,6 +3442,7 @@ export default function App() {
                 value={contestForm.msgSent}
                 onChange={(event) => updateContestField('msgSent', event.target.value)}
                 maxLength={50}
+                tabIndex={-1}
               />
             </label>
 
