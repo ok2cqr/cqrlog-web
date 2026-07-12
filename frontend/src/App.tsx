@@ -1069,6 +1069,20 @@ export default function App() {
   }, [viewMode]);
 
   useEffect(() => {
+    const suppressBackslash = (event: KeyboardEvent) => {
+      if (event.key === '\\' && !event.altKey && !event.ctrlKey && !event.metaKey) {
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('keydown', suppressBackslash, true);
+
+    return () => {
+      window.removeEventListener('keydown', suppressBackslash, true);
+    };
+  }, []);
+
+  useEffect(() => {
     if (
       (viewMode !== 'entry' && viewMode !== 'contest')
       || profileDialog.status !== 'closed'
