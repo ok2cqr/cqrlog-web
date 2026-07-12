@@ -4,6 +4,7 @@ import {
   createProfile,
   createLogEntry,
   createNote,
+  deleteLogEntry,
   deleteProfile,
   getAuthStatus,
   getCallsignContext,
@@ -2659,6 +2660,41 @@ export default function App() {
     }
   }
 
+  async function handleDeleteQso(): Promise<void> {
+    if (editDialog.entryId === null) {
+      return;
+    }
+
+    const entryId = editDialog.entryId;
+    const shouldDelete = window.confirm(`Delete QSO #${entryId} (${editDialog.originalCallsign})?`);
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    setEditDialog((current) => ({
+      ...current,
+      status: 'saving',
+      message: 'Deleting QSO…',
+    }));
+
+    try {
+      await deleteLogEntry(entryId);
+      closeEditDialog();
+      setQsoListFeedback({
+        status: 'saved',
+        message: `Deleted QSO #${entryId}.`,
+      });
+      setQsoListReloadKey((current) => current + 1);
+    } catch (error) {
+      setEditDialog((current) => ({
+        ...current,
+        status: 'ready',
+        message: error instanceof Error ? error.message : 'Unable to delete QSO.',
+      }));
+    }
+  }
+
   const qsoDuration = formatQsoDuration(qsoStartedAt);
   const isEntryView = viewMode === 'entry';
   const isContestView = viewMode === 'contest';
@@ -4015,16 +4051,26 @@ export default function App() {
 
                       <div className="dialog__actions">
                         <button
-                          className="button button--secondary"
+                          className="button button--danger"
                           type="button"
-                          onClick={closeEditDialog}
+                          onClick={() => void handleDeleteQso()}
                           disabled={editDialog.status === 'saving'}
                         >
-                          Cancel
+                          Delete
                         </button>
-                        <button className="button button--primary" type="submit" disabled={editDialog.status === 'saving'}>
-                          {editDialog.status === 'saving' ? 'Saving…' : 'Save changes'}
-                        </button>
+                        <div className="dialog__actions-group">
+                          <button
+                            className="button button--secondary"
+                            type="button"
+                            onClick={closeEditDialog}
+                            disabled={editDialog.status === 'saving'}
+                          >
+                            Cancel
+                          </button>
+                          <button className="button button--primary" type="submit" disabled={editDialog.status === 'saving'}>
+                            {editDialog.status === 'saving' ? 'Saving…' : 'Save changes'}
+                          </button>
+                        </div>
                       </div>
                     </form>
                   ) : (

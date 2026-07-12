@@ -138,6 +138,12 @@ export function updateLogEntry(id: number, payload: Partial<LogEntryPayload>): P
   });
 }
 
+export function deleteLogEntry(id: number): Promise<void> {
+  return requestJson(`/api/logEntries/${id}`, {
+    method: 'DELETE',
+  });
+}
+
 export function getLogEntries(
   page: number,
   perPage = 50,

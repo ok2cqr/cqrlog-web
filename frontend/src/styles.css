@@ -943,6 +943,17 @@ textarea {
   flex-wrap: wrap;
 }
 
+.dialog__actions-group {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.button--danger {
+  background: transparent;
+  border: 1px solid rgba(192, 57, 43, 0.5);
+  color: #c0392b;
+}
+
 .dialog__title {
   margin: 0;
   font-size: 1.15rem;
@@ -1080,6 +1091,11 @@ textarea {
 :root[data-theme='dark'] .sidebar__button--active {
   background: linear-gradient(135deg, #ff7a1a, #ff9a52);
   color: white;
+}
+
+:root[data-theme='dark'] .button--danger {
+  border-color: rgba(231, 112, 99, 0.55);
+  color: #e77063;
 }
 
 :root[data-theme='dark'] .club-pill {
