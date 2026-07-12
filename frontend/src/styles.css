@@ -187,6 +187,12 @@ textarea {
   font-size: 0.88rem;
 }
 
+.contest-callsign-info {
+  margin: 0.1rem 0 0;
+  color: #6a8098;
+  font-size: 0.88rem;
+}
+
 .topbar__actions {
   display: inline-flex;
   gap: 0.45rem;
@@ -1122,6 +1128,7 @@ textarea {
 }
 
 :root[data-theme='dark'] .topbar__subtle,
+:root[data-theme='dark'] .contest-callsign-info,
 :root[data-theme='dark'] .field span,
 :root[data-theme='dark'] .field__meta,
 :root[data-theme='dark'] .meta-strip__label,

@@ -2697,6 +2697,31 @@ export default function App() {
   const qsoDuration = formatQsoDuration(qsoStartedAt);
   const isEntryView = viewMode === 'entry';
   const isContestView = viewMode === 'contest';
+
+  const contestDxccParts: string[] = [];
+
+  if (contestLookup.dxccData) {
+    const country = contestLookup.dxccData.details ?? contestLookup.dxccData.name;
+
+    if (country) {
+      contestDxccParts.push(
+        contestLookup.dxccData.continent ? `${country} (${contestLookup.dxccData.continent})` : country,
+      );
+    }
+
+    if (contestLookup.dxccData.waz) {
+      contestDxccParts.push(`WAZ ${contestLookup.dxccData.waz}`);
+    }
+
+    if (contestLookup.dxccData.itu) {
+      contestDxccParts.push(`ITU ${contestLookup.dxccData.itu}`);
+    }
+  }
+
+  const contestCallsignInfo = [contestLookup.autofill?.name ?? '', contestDxccParts.join(' | ')]
+    .filter((part) => part !== '')
+    .join(' — ');
+
   const isListView = viewMode === 'list';
   const isSettingsView = viewMode === 'settings';
   const isClusterView = viewMode === 'cluster';
@@ -3468,6 +3493,10 @@ export default function App() {
               />
             </label>
           </section>
+
+          {contestCallsignInfo !== '' ? (
+            <p className="contest-callsign-info">{contestCallsignInfo}</p>
+          ) : null}
 
           {contestSubmitState.message !== '' ? (
             <p
