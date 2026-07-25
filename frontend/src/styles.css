@@ -1053,6 +1053,14 @@ textarea {
   width: min(760px, 100%);
 }
 
+.dialog-backdrop--confirm {
+  z-index: 40;
+}
+
+.dialog--confirm {
+  width: min(360px, 100%);
+}
+
 .dialog-grid--profile-top {
   grid-template-columns: 120px minmax(0, 1fr) max-content;
   align-items: end;

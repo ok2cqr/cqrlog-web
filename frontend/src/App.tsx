@@ -256,6 +256,14 @@ type EditDialogState = {
   message: string;
 };
 
+type ConfirmState = {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  danger: boolean;
+  onConfirm: () => void;
+} | null;
+
 const STORAGE_KEYS = {
   band: 'cqrlog.band',
   mode: 'cqrlog.mode',
@@ -1051,6 +1059,7 @@ export default function App() {
     status: 'idle',
     message: '',
   });
+  const [confirmState, setConfirmState] = useState<ConfirmState>(null);
   const initialContestSettingsRef = useRef<ContestSettings | null>(null);
 
   if (initialContestSettingsRef.current === null) {
@@ -1187,6 +1196,7 @@ export default function App() {
       (viewMode !== 'entry' && viewMode !== 'contest')
       || profileDialog.status !== 'closed'
       || editDialog.status !== 'closed'
+      || confirmState !== null
     ) {
       return undefined;
     }
@@ -1239,7 +1249,26 @@ export default function App() {
     return () => {
       window.removeEventListener('keydown', handleWindowKeyDown);
     };
-  }, [editDialog.status, profileDialog.status, viewMode]);
+  }, [confirmState, editDialog.status, profileDialog.status, viewMode]);
+
+  useEffect(() => {
+    if (confirmState === null) {
+      return undefined;
+    }
+
+    const handleConfirmKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        closeConfirm();
+      }
+    };
+
+    window.addEventListener('keydown', handleConfirmKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleConfirmKeyDown);
+    };
+  }, [confirmState]);
 
   useEffect(() => {
     if (form.offline || !pageVisible || (viewMode !== 'entry' && viewMode !== 'contest')) {
@@ -2249,6 +2278,10 @@ export default function App() {
     setSettings({ ...DEFAULT_FRONTEND_SETTINGS });
   }
 
+  function closeConfirm(): void {
+    setConfirmState(null);
+  }
+
   function closeProfileDialog(): void {
     setProfileDialog({
       status: 'closed',
@@ -2356,31 +2389,39 @@ export default function App() {
     }
   }
 
-  async function handleDeleteSelectedProfile(): Promise<void> {
+  function handleDeleteSelectedProfile(): void {
     if (selectedProfile === null) {
       return;
     }
 
-    const shouldDelete = window.confirm(`Delete profile #${selectedProfile.number}?`);
+    const profileToDelete = selectedProfile;
 
-    if (!shouldDelete) {
-      return;
-    }
+    setConfirmState({
+      title: 'Delete profile',
+      message: `Delete profile #${profileToDelete.number}${profileToDelete.qth ? ` (${profileToDelete.qth})` : ''}?`,
+      confirmLabel: 'Delete',
+      danger: true,
+      onConfirm: () => {
+        closeConfirm();
 
-    try {
-      await deleteProfile(selectedProfile.id);
-      setProfilesReloadKey((current) => current + 1);
-      setSettings((current) => ({
-        ...current,
-        defaultProfileId: current.defaultProfileId === selectedProfile.id ? null : current.defaultProfileId,
-      }));
-    } catch (error) {
-      setProfiles((current) => ({
-        ...current,
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unable to delete profile.',
-      }));
-    }
+        void (async () => {
+          try {
+            await deleteProfile(profileToDelete.id);
+            setProfilesReloadKey((current) => current + 1);
+            setSettings((current) => ({
+              ...current,
+              defaultProfileId: current.defaultProfileId === profileToDelete.id ? null : current.defaultProfileId,
+            }));
+          } catch (error) {
+            setProfiles((current) => ({
+              ...current,
+              status: 'error',
+              message: error instanceof Error ? error.message : 'Unable to delete profile.',
+            }));
+          }
+        })();
+      },
+    });
   }
 
   function closeEditDialog(): void {
@@ -2701,13 +2742,16 @@ export default function App() {
   }
 
   function handleClear(): void {
-    const shouldClear = window.confirm('Clear all entered QSO fields?');
-
-    if (!shouldClear) {
-      return;
-    }
-
-    resetEntryForm();
+    setConfirmState({
+      title: 'Clear form',
+      message: 'Clear all entered QSO fields?',
+      confirmLabel: 'Clear',
+      danger: false,
+      onConfirm: () => {
+        closeConfirm();
+        resetEntryForm();
+      },
+    });
   }
 
   async function handleEditSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
@@ -2806,39 +2850,47 @@ export default function App() {
     }
   }
 
-  async function handleDeleteQso(): Promise<void> {
+  function handleDeleteQso(): void {
     if (editDialog.entryId === null) {
       return;
     }
 
     const entryId = editDialog.entryId;
-    const shouldDelete = window.confirm(`Delete QSO #${entryId} (${editDialog.originalCallsign})?`);
+    const callsign = editDialog.originalCallsign;
 
-    if (!shouldDelete) {
-      return;
-    }
+    setConfirmState({
+      title: 'Delete QSO',
+      message: `Delete QSO #${entryId} (${callsign})?`,
+      confirmLabel: 'Delete',
+      danger: true,
+      onConfirm: () => {
+        closeConfirm();
 
-    setEditDialog((current) => ({
-      ...current,
-      status: 'saving',
-      message: 'Deleting QSO…',
-    }));
+        setEditDialog((current) => ({
+          ...current,
+          status: 'saving',
+          message: 'Deleting QSO…',
+        }));
 
-    try {
-      await deleteLogEntry(entryId);
-      closeEditDialog();
-      setQsoListFeedback({
-        status: 'saved',
-        message: `Deleted QSO #${entryId}.`,
-      });
-      setQsoListReloadKey((current) => current + 1);
-    } catch (error) {
-      setEditDialog((current) => ({
-        ...current,
-        status: 'ready',
-        message: error instanceof Error ? error.message : 'Unable to delete QSO.',
-      }));
-    }
+        void (async () => {
+          try {
+            await deleteLogEntry(entryId);
+            closeEditDialog();
+            setQsoListFeedback({
+              status: 'saved',
+              message: `Deleted QSO #${entryId}.`,
+            });
+            setQsoListReloadKey((current) => current + 1);
+          } catch (error) {
+            setEditDialog((current) => ({
+              ...current,
+              status: 'ready',
+              message: error instanceof Error ? error.message : 'Unable to delete QSO.',
+            }));
+          }
+        })();
+      },
+    });
   }
 
   const qsoDuration = formatQsoDuration(qsoStartedAt);
@@ -4245,7 +4297,7 @@ export default function App() {
                         <button
                           className="button button--danger"
                           type="button"
-                          onClick={() => void handleDeleteQso()}
+                          onClick={handleDeleteQso}
                           disabled={editDialog.status === 'saving'}
                         >
                           Delete
@@ -4464,7 +4516,7 @@ export default function App() {
                   <button
                     className="button button--secondary button--settings-action"
                     type="button"
-                    onClick={() => void handleDeleteSelectedProfile()}
+                    onClick={handleDeleteSelectedProfile}
                     disabled={selectedProfile === null}
                   >
                     Delete
@@ -4635,6 +4687,38 @@ export default function App() {
           </div>
         ) : null}
       </main>
+      {confirmState !== null ? (
+        <div
+          className="dialog-backdrop dialog-backdrop--confirm"
+          role="presentation"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              closeConfirm();
+            }
+          }}
+        >
+          <div className="dialog dialog--confirm" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
+            <div className="dialog__header">
+              <h3 id="confirm-dialog-title" className="dialog__title">
+                {confirmState.title}
+              </h3>
+            </div>
+            <p className="dialog__subtle">{confirmState.message}</p>
+            <div className="dialog__actions">
+              <button className="button button--secondary" type="button" onClick={closeConfirm} autoFocus>
+                Cancel
+              </button>
+              <button
+                className={confirmState.danger ? 'button button--danger' : 'button button--primary'}
+                type="button"
+                onClick={confirmState.onConfirm}
+              >
+                {confirmState.confirmLabel}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {authState === 'session-expired' ? (
         <div className="login-overlay">
           <form className="login-form" onSubmit={handleLogin}>
