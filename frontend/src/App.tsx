@@ -255,6 +255,7 @@ const STORAGE_KEYS = {
   power: 'cqrlog.power',
   settings: 'cqrlog.settings',
   contest: 'cqrlog.contest',
+  sidebarCollapsed: 'cqrlog.sidebarCollapsed.v1',
 } as const;
 
 const DEFAULT_FRONTEND_SETTINGS: FrontendSettings = {
@@ -933,6 +934,13 @@ export default function App() {
     message: '',
   });
   const [viewMode, setViewMode] = useState<ViewMode>('entry');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    return window.localStorage.getItem(STORAGE_KEYS.sidebarCollapsed) === '1';
+  });
   const [qsoList, setQsoList] = useState<QsoListState>({
     status: 'idle',
     items: [],
@@ -1205,6 +1213,10 @@ export default function App() {
       }),
     );
   }, [contestAutoIncrement, contestForm.serialSent, contestName]);
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.sidebarCollapsed, sidebarCollapsed ? '1' : '0');
+  }, [sidebarCollapsed]);
 
   useEffect(() => {
     if (authState !== 'logged-in') {
@@ -2786,65 +2798,77 @@ export default function App() {
   }
 
   return (
-    <div className="shell">
-      <aside className="sidebar">
-        <button
-          className={isEntryView ? 'sidebar__accent sidebar__button--active' : 'sidebar__accent'}
-          type="button"
-          aria-label="New QSO"
-          title="New QSO"
-          onClick={openEntryView}
-        >
-          +
-        </button>
-        <button
-          className={isContestView ? 'sidebar__menu sidebar__button--active' : 'sidebar__menu'}
-          type="button"
-          aria-label="Contest"
-          title="Contest"
-          onClick={openContestView}
-        >
-          <svg className="sidebar__icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M7 4h10v3a5 5 0 0 1-10 0V4Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-            <path d="M7 5H4.5v1.5A3.5 3.5 0 0 0 8 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M17 5h2.5v1.5A3.5 3.5 0 0 1 16 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M12 12v4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-            <path d="M8.5 19.5h7M10 16.5h4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-          </svg>
-        </button>
-        <button
-          className={isListView ? 'sidebar__menu sidebar__button--active' : 'sidebar__menu'}
-          type="button"
-          aria-label="QSO list"
-          title="QSO list"
-          onClick={openListView}
-        >
-          ≣
-        </button>
-        <button
-          className={isClusterView ? 'sidebar__menu sidebar__button--active' : 'sidebar__menu'}
-          type="button"
-          aria-label="DX Cluster"
-          title="DX Cluster"
-          onClick={openClusterView}
-        >
-          <svg className="sidebar__icon" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" strokeWidth="1.7" />
-            <path d="M3.5 12h17" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            <path d="M12 3.5c2.3 2.2 3.7 5.2 3.7 8.5S14.3 18.3 12 20.5C9.7 18.3 8.3 15.3 8.3 12S9.7 5.7 12 3.5Z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-            <path d="M6.1 7.8c1.6.7 3.8 1.1 5.9 1.1s4.3-.4 5.9-1.1" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-            <path d="M6.1 16.2c1.6-.7 3.8-1.1 5.9-1.1s4.3.4 5.9 1.1" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-          </svg>
-        </button>
-        <button
-          className={isSettingsView ? 'sidebar__menu sidebar__button--active' : 'sidebar__menu'}
-          type="button"
-          aria-label="Settings"
-          title="Settings"
-          onClick={openSettingsView}
-        >
-          ⚙
-        </button>
+    <div className={sidebarCollapsed ? 'shell shell--collapsed' : 'shell'}>
+      <button
+        className="sidebar-toggle"
+        type="button"
+        aria-expanded={!sidebarCollapsed}
+        aria-controls="app-sidebar"
+        aria-label={sidebarCollapsed ? 'Show menu' : 'Hide menu'}
+        onClick={() => setSidebarCollapsed((prev) => !prev)}
+      >
+        {sidebarCollapsed ? '›' : '‹'}
+      </button>
+      <aside className="sidebar" id="app-sidebar">
+        <nav className="sidebar__nav" aria-label="Main navigation">
+          <button
+            className={isEntryView ? 'sidebar__accent sidebar__button--active' : 'sidebar__accent'}
+            type="button"
+            aria-label="New QSO"
+            title="New QSO"
+            onClick={openEntryView}
+          >
+            +
+          </button>
+          <button
+            className={isContestView ? 'sidebar__menu sidebar__button--active' : 'sidebar__menu'}
+            type="button"
+            aria-label="Contest"
+            title="Contest"
+            onClick={openContestView}
+          >
+            <svg className="sidebar__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 4h10v3a5 5 0 0 1-10 0V4Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+              <path d="M7 5H4.5v1.5A3.5 3.5 0 0 0 8 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M17 5h2.5v1.5A3.5 3.5 0 0 1 16 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M12 12v4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+              <path d="M8.5 19.5h7M10 16.5h4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+            </svg>
+          </button>
+          <button
+            className={isListView ? 'sidebar__menu sidebar__button--active' : 'sidebar__menu'}
+            type="button"
+            aria-label="QSO list"
+            title="QSO list"
+            onClick={openListView}
+          >
+            ≣
+          </button>
+          <button
+            className={isClusterView ? 'sidebar__menu sidebar__button--active' : 'sidebar__menu'}
+            type="button"
+            aria-label="DX Cluster"
+            title="DX Cluster"
+            onClick={openClusterView}
+          >
+            <svg className="sidebar__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" strokeWidth="1.7" />
+              <path d="M3.5 12h17" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M12 3.5c2.3 2.2 3.7 5.2 3.7 8.5S14.3 18.3 12 20.5C9.7 18.3 8.3 15.3 8.3 12S9.7 5.7 12 3.5Z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+              <path d="M6.1 7.8c1.6.7 3.8 1.1 5.9 1.1s4.3-.4 5.9-1.1" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              <path d="M6.1 16.2c1.6-.7 3.8-1.1 5.9-1.1s4.3.4 5.9 1.1" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            </svg>
+          </button>
+          <button
+            className={isSettingsView ? 'sidebar__menu sidebar__button--active' : 'sidebar__menu'}
+            type="button"
+            aria-label="Settings"
+            title="Settings"
+            onClick={openSettingsView}
+          >
+            ⚙
+          </button>
+        </nav>
         {authRequired ? (
           <>
             <div className="sidebar__spacer" />
