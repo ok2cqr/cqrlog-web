@@ -144,10 +144,19 @@ export function deleteLogEntry(id: number): Promise<void> {
   });
 }
 
+export type LogEntryListOptions = {
+  contestName?: string;
+  callsign?: string;
+  qsoDateFrom?: string;
+  qsoDateTo?: string;
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
+};
+
 export function getLogEntries(
   page: number,
   perPage = 50,
-  filters?: { contestName?: string },
+  filters?: LogEntryListOptions,
 ): Promise<LogEntryListResponse> {
   const params = new URLSearchParams({
     page: page.toString(),
@@ -156,6 +165,26 @@ export function getLogEntries(
 
   if (filters?.contestName) {
     params.set('contestName', filters.contestName);
+  }
+
+  if (filters?.callsign) {
+    params.set('callsign', filters.callsign);
+  }
+
+  if (filters?.qsoDateFrom) {
+    params.set('qsoDateFrom', filters.qsoDateFrom);
+  }
+
+  if (filters?.qsoDateTo) {
+    params.set('qsoDateTo', filters.qsoDateTo);
+  }
+
+  if (filters?.sortBy) {
+    params.set('sortBy', filters.sortBy);
+  }
+
+  if (filters?.sortDirection) {
+    params.set('sortDirection', filters.sortDirection);
   }
 
   return requestJson<LogEntryListResponse>(`/api/logEntries?${params.toString()}`);

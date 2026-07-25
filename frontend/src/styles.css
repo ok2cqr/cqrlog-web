@@ -723,6 +723,52 @@ textarea {
   white-space: nowrap;
 }
 
+.list-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.list-filters__input {
+  min-height: 40px;
+  border: 1px solid rgba(16, 32, 51, 0.14);
+  border-radius: 11px;
+  background: rgba(250, 252, 255, 0.94);
+  padding: 0 0.75rem;
+  color: #102033;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+}
+
+.list-filters__input:focus {
+  outline: none;
+  border-color: rgba(11, 112, 227, 0.55);
+  box-shadow: 0 0 0 4px rgba(11, 112, 227, 0.12);
+  background: white;
+}
+
+.list-filters__input--callsign {
+  width: 150px;
+  flex: 0 1 150px;
+  text-transform: uppercase;
+}
+
+.list-filters__input--callsign::placeholder {
+  text-transform: none;
+}
+
+.list-filters__input[type='date'] {
+  width: 150px;
+  flex: 0 1 150px;
+}
+
+.list-filters__clear {
+  margin-left: auto;
+}
+
 .panel--settings {
   max-width: 980px;
 }
@@ -921,6 +967,26 @@ textarea {
 .qso-list-table__head {
   font-weight: 700;
   background: rgba(244, 248, 253, 0.95);
+}
+
+.qso-list-table__sort {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  font: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+
+.qso-list-table__sort:hover {
+  color: #1276e4;
+}
+
+.qso-list-table__sort:focus-visible {
+  outline: 2px solid rgba(11, 112, 227, 0.55);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .qso-list-table__row {
@@ -1203,7 +1269,8 @@ textarea {
 :root[data-theme='dark'] .field input,
 :root[data-theme='dark'] .field select,
 :root[data-theme='dark'] .field textarea,
-:root[data-theme='dark'] .settings-select {
+:root[data-theme='dark'] .settings-select,
+:root[data-theme='dark'] .list-filters__input {
   background: rgba(12, 19, 28, 0.96);
   border-color: rgba(139, 162, 188, 0.2);
   color: #e7edf6;
@@ -1212,8 +1279,13 @@ textarea {
 :root[data-theme='dark'] .field input:focus,
 :root[data-theme='dark'] .field select:focus,
 :root[data-theme='dark'] .field textarea:focus,
-:root[data-theme='dark'] .settings-select:focus {
+:root[data-theme='dark'] .settings-select:focus,
+:root[data-theme='dark'] .list-filters__input:focus {
   background: rgba(9, 15, 23, 0.98);
+}
+
+:root[data-theme='dark'] .qso-list-table__sort:hover {
+  color: #5ea8ff;
 }
 
 :root[data-theme='dark'] .topbar__subtle,
@@ -1518,5 +1590,22 @@ textarea {
 
   .setting-toggle {
     justify-content: flex-start;
+  }
+}
+
+@media (max-width: 390px) {
+  .list-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .list-filters__input--callsign,
+  .list-filters__input[type='date'] {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+
+  .list-filters__clear {
+    margin-left: 0;
   }
 }

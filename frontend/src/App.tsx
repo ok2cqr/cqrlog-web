@@ -159,6 +159,17 @@ type QsoListState = {
   message: string;
 };
 
+type QsoListSortField = 'qsoDate' | 'callsign' | 'frequency' | 'mode' | 'id';
+type QsoListSortDirection = 'asc' | 'desc';
+
+type QsoListFilterState = QsoListState & {
+  callsignFilter: string;
+  dateFrom: string;
+  dateTo: string;
+  sortBy: QsoListSortField;
+  sortDirection: QsoListSortDirection;
+};
+
 type ContestFormState = {
   callsign: string;
   rstSent: string;
@@ -1039,7 +1050,7 @@ export default function App() {
 
     return window.localStorage.getItem(STORAGE_KEYS.sidebarCollapsed) === '1';
   });
-  const [qsoList, setQsoList] = useState<QsoListState>({
+  const [qsoList, setQsoList] = useState<QsoListFilterState>({
     status: 'idle',
     items: [],
     totalCount: 0,
@@ -1047,7 +1058,13 @@ export default function App() {
     perPage: 50,
     totalPages: 1,
     message: 'Open QSO list to load records.',
+    callsignFilter: '',
+    dateFrom: '',
+    dateTo: '',
+    sortBy: 'qsoDate',
+    sortDirection: 'desc',
   });
+  const [qsoListCallsignInput, setQsoListCallsignInput] = useState('');
   const [dxCluster, setDxCluster] = useState<DxClusterState>({
     status: 'idle',
     items: [],
@@ -1903,6 +1920,26 @@ export default function App() {
   }, [deferredEditCallsign, editDialog.form?.qsoDate]);
 
   useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      const trimmed = qsoListCallsignInput.trim();
+
+      setQsoList((current) => {
+        if (trimmed === current.callsignFilter) {
+          return current;
+        }
+
+        return {
+          ...current,
+          callsignFilter: trimmed,
+          page: 1,
+        };
+      });
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [qsoListCallsignInput]);
+
+  useEffect(() => {
     if (viewMode !== 'list') {
       return undefined;
     }
@@ -1915,13 +1952,20 @@ export default function App() {
       message: 'Loading QSO list…',
     }));
 
-    void getLogEntries(qsoList.page, qsoList.perPage)
+    void getLogEntries(qsoList.page, qsoList.perPage, {
+      callsign: qsoList.callsignFilter || undefined,
+      qsoDateFrom: qsoList.dateFrom || undefined,
+      qsoDateTo: qsoList.dateTo || undefined,
+      sortBy: qsoList.sortBy,
+      sortDirection: qsoList.sortDirection,
+    })
       .then((response) => {
         if (cancelled) {
           return;
         }
 
-        setQsoList({
+        setQsoList((current) => ({
+          ...current,
           status: 'ready',
           items: response.items,
           totalCount: response.totalCount,
@@ -1929,7 +1973,7 @@ export default function App() {
           perPage: response.perPage,
           totalPages: response.totalPages,
           message: response.totalCount === 0 ? 'No QSOs found.' : '',
-        });
+        }));
       })
       .catch((error) => {
         if (cancelled) {
@@ -1949,7 +1993,17 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [qsoList.page, qsoList.perPage, qsoListReloadKey, viewMode]);
+  }, [
+    qsoList.page,
+    qsoList.perPage,
+    qsoList.callsignFilter,
+    qsoList.dateFrom,
+    qsoList.dateTo,
+    qsoList.sortBy,
+    qsoList.sortDirection,
+    qsoListReloadKey,
+    viewMode,
+  ]);
 
   useEffect(() => {
     if (viewMode !== 'contest') {
@@ -2463,6 +2517,68 @@ export default function App() {
     }));
   }
 
+  function changeQsoListDateFrom(value: string): void {
+    setQsoList((current) => ({
+      ...current,
+      dateFrom: value,
+      page: 1,
+    }));
+  }
+
+  function changeQsoListDateTo(value: string): void {
+    setQsoList((current) => ({
+      ...current,
+      dateTo: value,
+      page: 1,
+    }));
+  }
+
+  function changeQsoListSort(field: QsoListSortField): void {
+    setQsoList((current) => {
+      if (current.sortBy === field) {
+        return {
+          ...current,
+          sortDirection: current.sortDirection === 'asc' ? 'desc' : 'asc',
+          page: 1,
+        };
+      }
+
+      return {
+        ...current,
+        sortBy: field,
+        sortDirection: field === 'qsoDate' ? 'desc' : 'asc',
+        page: 1,
+      };
+    });
+  }
+
+  function clearQsoListFilters(): void {
+    setQsoListCallsignInput('');
+    setQsoList((current) => ({
+      ...current,
+      callsignFilter: '',
+      dateFrom: '',
+      dateTo: '',
+      page: 1,
+    }));
+  }
+
+  function qsoListSortIndicator(field: QsoListSortField): string {
+    if (qsoList.sortBy !== field) {
+      return '';
+    }
+
+    return qsoList.sortDirection === 'asc' ? ' ▲' : ' ▼';
+  }
+
+  function qsoListAriaSort(field: QsoListSortField): 'ascending' | 'descending' | undefined {
+    if (qsoList.sortBy !== field) {
+      return undefined;
+    }
+
+    return qsoList.sortDirection === 'asc' ? 'ascending' : 'descending';
+  }
+
   async function openEditDialog(entryId: number): Promise<void> {
     setEditDialog({
       status: 'loading',
@@ -2932,6 +3048,8 @@ export default function App() {
   const isClusterView = viewMode === 'cluster';
   const canGoToPreviousQsoPage = qsoList.page > 1;
   const canGoToNextQsoPage = qsoList.page < qsoList.totalPages;
+  const hasActiveQsoListFilters =
+    qsoListCallsignInput.trim() !== '' || qsoList.dateFrom !== '' || qsoList.dateTo !== '';
   const currentQsoNumber = lookup.status === 'ready' && lookupCallsign !== '' ? recentQsoCount + 1 : null;
 
   if (authState === 'checking') {
@@ -3858,19 +3976,69 @@ export default function App() {
               </div>
             </header>
 
+            <div className="list-filters">
+              <input
+                className="list-filters__input list-filters__input--callsign"
+                type="text"
+                placeholder="Filter callsign"
+                maxLength={20}
+                value={qsoListCallsignInput}
+                onChange={(event) => setQsoListCallsignInput(event.target.value)}
+              />
+              <input
+                className="list-filters__input"
+                type="date"
+                aria-label="QSO date from"
+                value={qsoList.dateFrom}
+                onChange={(event) => changeQsoListDateFrom(event.target.value)}
+              />
+              <input
+                className="list-filters__input"
+                type="date"
+                aria-label="QSO date to"
+                value={qsoList.dateTo}
+                onChange={(event) => changeQsoListDateTo(event.target.value)}
+              />
+              {hasActiveQsoListFilters ? (
+                <button
+                  className="button button--secondary button--list-action list-filters__clear"
+                  type="button"
+                  onClick={clearQsoListFilters}
+                >
+                  Clear filters
+                </button>
+              ) : null}
+            </div>
+
             {qsoList.status === 'error' ? <p className="submission-message submission-message--error">{qsoList.message}</p> : null}
             {qsoList.status === 'loading' ? <p className="list-status">Loading QSO list…</p> : null}
 
             <div className="qso-list-table">
               <div className="qso-list-table__head">
-                <span>QSO Date</span>
+                <span aria-sort={qsoListAriaSort('qsoDate')}>
+                  <button type="button" className="qso-list-table__sort" onClick={() => changeQsoListSort('qsoDate')}>
+                    QSO Date{qsoListSortIndicator('qsoDate')}
+                  </button>
+                </span>
                 <span>Time on/off</span>
-                <span>Callsign</span>
+                <span aria-sort={qsoListAriaSort('callsign')}>
+                  <button type="button" className="qso-list-table__sort" onClick={() => changeQsoListSort('callsign')}>
+                    Callsign{qsoListSortIndicator('callsign')}
+                  </button>
+                </span>
                 <span>RST_S</span>
                 <span>RST_R</span>
                 <span>Band</span>
-                <span>Freq</span>
-                <span>Mode</span>
+                <span aria-sort={qsoListAriaSort('frequency')}>
+                  <button type="button" className="qso-list-table__sort" onClick={() => changeQsoListSort('frequency')}>
+                    Freq{qsoListSortIndicator('frequency')}
+                  </button>
+                </span>
+                <span aria-sort={qsoListAriaSort('mode')}>
+                  <button type="button" className="qso-list-table__sort" onClick={() => changeQsoListSort('mode')}>
+                    Mode{qsoListSortIndicator('mode')}
+                  </button>
+                </span>
                 <span>Name</span>
                 <span>QTH</span>
                 <span>Award</span>
