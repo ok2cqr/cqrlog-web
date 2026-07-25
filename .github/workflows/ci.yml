@@ -43,6 +43,9 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist
 
+      - name: Install MariaDB client
+        run: sudo apt-get update && sudo apt-get install -y mariadb-client
+
       - name: Load database schema
         run: mariadb -h127.0.0.1 -uroot -proot cqrlog002_test < schema.sql
 
