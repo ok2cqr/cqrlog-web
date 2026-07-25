@@ -69,6 +69,14 @@ type FormState = {
   clubNumber5: string;
 };
 
+type EntryDraft = {
+  v: 1;
+  savedAt: number;
+  form: FormState;
+  qsoStarted: boolean;
+  qsoStartedAt: string | null;
+};
+
 type LookupState = {
   status: 'idle' | 'loading' | 'ready' | 'error';
   message: string;
@@ -256,7 +264,12 @@ const STORAGE_KEYS = {
   settings: 'cqrlog.settings',
   contest: 'cqrlog.contest',
   sidebarCollapsed: 'cqrlog.sidebarCollapsed.v1',
+  viewMode: 'cqrlog.viewMode.v1',
+  entryDraft: 'cqrlog.entryDraft.v1',
 } as const;
+
+const ENTRY_DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
+const viewModeOptions: ViewMode[] = ['entry', 'list', 'settings', 'cluster', 'contest'];
 
 const DEFAULT_FRONTEND_SETTINGS: FrontendSettings = {
   theme: 'auto',
@@ -529,6 +542,68 @@ function readInitialContestSettings(): ContestSettings {
     };
   } catch {
     return DEFAULT_CONTEST_SETTINGS;
+  }
+}
+
+function readInitialViewMode(): ViewMode {
+  if (typeof window === 'undefined') {
+    return 'entry';
+  }
+
+  const stored = window.localStorage.getItem(STORAGE_KEYS.viewMode);
+  const match = viewModeOptions.find((option) => option === stored);
+
+  return match ?? 'entry';
+}
+
+function readStoredEntryDraft(): EntryDraft | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const rawValue = window.localStorage.getItem(STORAGE_KEYS.entryDraft);
+
+  if (rawValue === null) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(rawValue);
+
+    if (
+      typeof parsed !== 'object'
+      || parsed === null
+      || parsed.v !== 1
+      || typeof parsed.savedAt !== 'number'
+      || typeof parsed.qsoStarted !== 'boolean'
+      || (parsed.qsoStartedAt !== null && typeof parsed.qsoStartedAt !== 'string')
+      || typeof parsed.form !== 'object'
+      || parsed.form === null
+    ) {
+      return null;
+    }
+
+    if (Date.now() - parsed.savedAt > ENTRY_DRAFT_TTL_MS) {
+      return null;
+    }
+
+    if (!bandOptions.includes(parsed.form.band) || !modeOptions.includes(parsed.form.mode)) {
+      return null;
+    }
+
+    if (parsed.qsoStartedAt !== null && Number.isNaN(Date.parse(parsed.qsoStartedAt))) {
+      return null;
+    }
+
+    return {
+      v: 1,
+      savedAt: parsed.savedAt,
+      form: parsed.form as FormState,
+      qsoStarted: parsed.qsoStarted,
+      qsoStartedAt: parsed.qsoStartedAt,
+    };
+  } catch {
+    return null;
   }
 }
 
@@ -915,7 +990,12 @@ export default function App() {
   });
   const [radioSyncConfig, setRadioSyncConfig] = useState<RadioSyncConfig | null>(null);
   const [radioSyncState, setRadioSyncState] = useState<RadioSyncState>('idle');
-  const [form, setForm] = useState<FormState>(() => createInitialFormState());
+  const [form, setForm] = useState<FormState>(() => {
+    // draft wins over per-field defaults by design
+    const draft = readStoredEntryDraft();
+
+    return draft ? draft.form : createInitialFormState();
+  });
   const [lookup, setLookup] = useState<LookupState>({
     status: 'idle',
     message: 'Enter a callsign to load note, recent QSOs and club memberships.',
@@ -941,7 +1021,7 @@ export default function App() {
     form: null,
     message: '',
   });
-  const [viewMode, setViewMode] = useState<ViewMode>('entry');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => readInitialViewMode());
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
     if (typeof window === 'undefined') {
       return false;
@@ -1032,8 +1112,12 @@ export default function App() {
   });
   const [knownNoteId, setKnownNoteId] = useState<number | null>(null);
   const [callsignNoteDirty, setCallsignNoteDirty] = useState(false);
-  const [qsoStarted, setQsoStarted] = useState(false);
-  const [qsoStartedAt, setQsoStartedAt] = useState<Date | null>(null);
+  const [qsoStarted, setQsoStarted] = useState(() => readStoredEntryDraft()?.qsoStarted ?? false);
+  const [qsoStartedAt, setQsoStartedAt] = useState<Date | null>(() => {
+    const draft = readStoredEntryDraft();
+
+    return draft?.qsoStartedAt ? new Date(draft.qsoStartedAt) : null;
+  });
   const normalizedCallsign = form.callsign.trim().toUpperCase();
   const deferredEditCallsign = useDeferredValue(editDialog.form?.callsign.trim().toUpperCase() ?? '');
   const [lookupCallsign, setLookupCallsign] = useState('');
@@ -1226,6 +1310,26 @@ export default function App() {
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEYS.sidebarCollapsed, sidebarCollapsed ? '1' : '0');
   }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.viewMode, viewMode);
+  }, [viewMode]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      const draft: EntryDraft = {
+        v: 1,
+        savedAt: Date.now(),
+        form,
+        qsoStarted,
+        qsoStartedAt: qsoStartedAt ? qsoStartedAt.toISOString() : null,
+      };
+
+      window.localStorage.setItem(STORAGE_KEYS.entryDraft, JSON.stringify(draft));
+    }, 500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [form, qsoStarted, qsoStartedAt]);
 
   useEffect(() => {
     if (authState !== 'logged-in') {
@@ -2419,6 +2523,7 @@ export default function App() {
       status: 'idle',
       message: '',
     });
+    window.localStorage.removeItem(STORAGE_KEYS.entryDraft);
 
     window.requestAnimationFrame(() => {
       callsignInputRef.current?.focus();
