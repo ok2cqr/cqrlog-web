@@ -4013,64 +4013,66 @@ export default function App() {
             {qsoList.status === 'error' ? <p className="submission-message submission-message--error">{qsoList.message}</p> : null}
             {qsoList.status === 'loading' ? <p className="list-status">Loading QSO list…</p> : null}
 
-            <div className="qso-list-table">
-              <div className="qso-list-table__head">
-                <span aria-sort={qsoListAriaSort('qsoDate')}>
+            <div className="qso-list-table" role="table" aria-label="QSO log">
+              <div className="qso-list-table__head" role="row">
+                <span role="columnheader" aria-sort={qsoListAriaSort('qsoDate')}>
                   <button type="button" className="qso-list-table__sort" onClick={() => changeQsoListSort('qsoDate')}>
                     QSO Date{qsoListSortIndicator('qsoDate')}
                   </button>
                 </span>
-                <span>Time on/off</span>
-                <span aria-sort={qsoListAriaSort('callsign')}>
+                <span role="columnheader">Time on/off</span>
+                <span role="columnheader" aria-sort={qsoListAriaSort('callsign')}>
                   <button type="button" className="qso-list-table__sort" onClick={() => changeQsoListSort('callsign')}>
                     Callsign{qsoListSortIndicator('callsign')}
                   </button>
                 </span>
-                <span>RST_S</span>
-                <span>RST_R</span>
-                <span>Band</span>
-                <span aria-sort={qsoListAriaSort('frequency')}>
+                <span role="columnheader">RST_S</span>
+                <span role="columnheader">RST_R</span>
+                <span role="columnheader">Band</span>
+                <span role="columnheader" aria-sort={qsoListAriaSort('frequency')}>
                   <button type="button" className="qso-list-table__sort" onClick={() => changeQsoListSort('frequency')}>
                     Freq{qsoListSortIndicator('frequency')}
                   </button>
                 </span>
-                <span aria-sort={qsoListAriaSort('mode')}>
+                <span role="columnheader" aria-sort={qsoListAriaSort('mode')}>
                   <button type="button" className="qso-list-table__sort" onClick={() => changeQsoListSort('mode')}>
                     Mode{qsoListSortIndicator('mode')}
                   </button>
                 </span>
-                <span>Name</span>
-                <span>QTH</span>
-                <span>Award</span>
-                <span>Pfx</span>
-                <span>Edit</span>
+                <span role="columnheader">Name</span>
+                <span role="columnheader">QTH</span>
+                <span role="columnheader">Award</span>
+                <span role="columnheader">Pfx</span>
+                <span role="columnheader">Edit</span>
               </div>
 
               {qsoList.items.length > 0 ? (
                 qsoList.items.map((item) => (
-                  <div key={item.id} className="qso-list-table__row">
-                    <span>{item.qsoDate}</span>
-                    <span>
+                  <div key={item.id} className="qso-list-table__row" role="row">
+                    <span role="cell">{item.qsoDate}</span>
+                    <span role="cell">
                       {item.timeOn}
                       {item.timeOff ? ` / ${item.timeOff}` : ''}
                     </span>
-                    <span>{item.callsign}</span>
-                    <span>{item.rstSent ?? '-'}</span>
-                    <span>{item.rstReceived ?? '-'}</span>
-                    <span>{item.band ?? '-'}</span>
-                    <span>{formatFrequency(item.frequency)}</span>
-                    <span>{item.mode}</span>
-                    <span>{item.name ?? '-'}</span>
-                    <span>{item.qth ?? '-'}</span>
-                    <span>{item.award ?? '-'}</span>
-                    <span>{item.dxccRef ?? '-'}</span>
-                    <button
-                      className="button button--secondary button--list-action"
-                      type="button"
-                      onClick={() => void openEditDialog(item.id)}
-                    >
-                      Edit
-                    </button>
+                    <span role="cell">{item.callsign}</span>
+                    <span role="cell">{item.rstSent ?? '-'}</span>
+                    <span role="cell">{item.rstReceived ?? '-'}</span>
+                    <span role="cell">{item.band ?? '-'}</span>
+                    <span role="cell">{formatFrequency(item.frequency)}</span>
+                    <span role="cell">{item.mode}</span>
+                    <span role="cell">{item.name ?? '-'}</span>
+                    <span role="cell">{item.qth ?? '-'}</span>
+                    <span role="cell">{item.award ?? '-'}</span>
+                    <span role="cell">{item.dxccRef ?? '-'}</span>
+                    <span role="cell">
+                      <button
+                        className="button button--secondary button--list-action"
+                        type="button"
+                        onClick={() => void openEditDialog(item.id)}
+                      >
+                        Edit
+                      </button>
+                    </span>
                   </div>
                 ))
               ) : (
