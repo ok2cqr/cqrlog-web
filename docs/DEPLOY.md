@@ -77,20 +77,19 @@ That file intentionally leaves TLS out so you can add certificates later via cer
 
 ## Minimal access protection
 
-Recommended production shape:
+Built-in authentication is fail-closed:
 
-- use Basic Auth in the front Apache2 reverse proxy
-- keep the app container itself without Basic Auth
-- `/api/health` stays public for simple health checks
-
-Optional:
-
-- the app has a built-in login form
-- it is enabled only when both `LOGIN_USERNAME` and `LOGIN_PASSWORD` are set
-- when enabled, all API endpoints (except `/api/health`) require a valid session
+- `LOGIN_USERNAME` and `LOGIN_PASSWORD` must be configured (deployment fails with `503 auth_not_configured` for unauthenticated requests)
+- all API endpoints except `/api/health` require a valid session
 - sessions are created via the login form at the application level
 
-This is intentionally minimal and suitable mainly for a private or small-team deployment.
+Recommended for defense in depth:
+
+- also use Basic Auth in the front Apache2 reverse proxy
+- this provides an additional layer of authentication before requests reach the app container
+- `/api/health` can remain public for simple health checks
+
+This layered approach is intentionally minimal and suitable mainly for a private or small-team deployment.
 
 ## Updates
 
