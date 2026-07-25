@@ -55,7 +55,7 @@ async function requestJson<T>(input: RequestInfo, init?: RequestInit): Promise<T
       throw new Error('Session expired. Please log in again.');
     }
 
-    let payload: ApiErrorPayload | null = null;
+    let payload: ApiErrorPayload | null;
 
     try {
       payload = (await response.json()) as ApiErrorPayload;
