@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_DATABASE: cqrlog002_test
+          MARIADB_USER: cqrlog
+          MARIADB_PASSWORD: cqrlog
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+          --health-start-period=10s
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # phpunit.dist.xml forces DB_HOST=db (force="true"), so env var overrides
+      # do not work here. Point the "db" hostname at the mariadb service instead.
+      - name: Alias db hostname to the mariadb service
+        run: echo "127.0.0.1 db" | sudo tee -a /etc/hosts
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: ctype, iconv, mysqli, pdo_mysql, intl, zip
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Load database schema
+        run: mariadb -h127.0.0.1 -uroot -proot cqrlog002_test < schema.sql
+
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit
+
+  frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
