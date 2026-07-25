@@ -346,11 +346,11 @@ function pad(value: number): string {
 }
 
 function formatDateForInput(date: Date): string {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
 }
 
 function formatTimeForInput(date: Date): string {
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  return `${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`;
 }
 
 function formatDateTimeLabel(date: Date): string {
@@ -3236,7 +3236,10 @@ export default function App() {
                 </label>
 
                 <label className="field">
-                  <span>Time on</span>
+                  <span className="field__label">
+                    <span>Time on</span>
+                    <span className="field__meta">UTC</span>
+                  </span>
                   <input
                     type="time"
                     value={form.timeOn}
@@ -3331,7 +3334,7 @@ export default function App() {
             <div className="topbar__dxcc">
               <span className="meta-strip__label">Contest</span>
               <p className="topbar__line">
-                {form.qsoDate} {form.timeOn}
+                {form.qsoDate} {form.timeOn} <span className="topbar__utc">UTC</span>
               </p>
             </div>
 
