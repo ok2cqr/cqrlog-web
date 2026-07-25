@@ -839,6 +839,14 @@ function parseSolarDataSummary(responseText: string): string {
 }
 
 export default function App() {
+  const [pageVisible, setPageVisible] = useState(() => document.visibilityState === 'visible');
+
+  useEffect(() => {
+    const onVisibility = () => setPageVisible(document.visibilityState === 'visible');
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
+
   const [authState, setAuthState] = useState<'checking' | 'logged-in' | 'logged-out' | 'session-expired'>('checking');
   const [authRequired, setAuthRequired] = useState(true);
   const [loginError, setLoginError] = useState('');
@@ -1150,7 +1158,7 @@ export default function App() {
   }, [editDialog.status, profileDialog.status, viewMode]);
 
   useEffect(() => {
-    if (form.offline) {
+    if (form.offline || !pageVisible || (viewMode !== 'entry' && viewMode !== 'contest')) {
       return undefined;
     }
 
@@ -1161,10 +1169,11 @@ export default function App() {
 
       setForm((current) => {
         if (qsoStarted) {
-          return {
-            ...current,
-            timeOff: time,
-          };
+          return current.timeOff === time ? current : { ...current, timeOff: time };
+        }
+
+        if (current.qsoDate === date && current.timeOn === time && current.timeOff === time) {
+          return current;
         }
 
         return {
@@ -1181,7 +1190,7 @@ export default function App() {
     const intervalId = window.setInterval(syncDateTime, 1000);
 
     return () => window.clearInterval(intervalId);
-  }, [form.offline, qsoStarted]);
+  }, [form.offline, qsoStarted, viewMode, pageVisible]);
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEYS.band, form.band);
@@ -1258,6 +1267,11 @@ export default function App() {
   }, [authState]);
 
   useEffect(() => {
+    if (!pageVisible) {
+      setRadioSyncState('idle');
+      return undefined;
+    }
+
     if (radioSyncConfig === null) {
       setRadioSyncState('idle');
       return undefined;
@@ -1315,7 +1329,7 @@ export default function App() {
       cancelled = true;
       window.clearInterval(intervalId);
     };
-  }, [radioSyncConfig]);
+  }, [radioSyncConfig, pageVisible]);
 
   useEffect(() => {
     setForm((current) => ({
@@ -1872,7 +1886,7 @@ export default function App() {
   }, [contestName, contestQsoReloadKey, viewMode]);
 
   useEffect(() => {
-    if (viewMode !== 'cluster') {
+    if (viewMode !== 'cluster' || !pageVisible) {
       return undefined;
     }
 
@@ -1937,7 +1951,7 @@ export default function App() {
       cancelled = true;
       window.clearInterval(intervalId);
     };
-  }, [dxClusterReloadKey, viewMode]);
+  }, [dxClusterReloadKey, viewMode, pageVisible]);
 
   function updateField<K extends keyof FormState>(field: K, value: FormState[K]): void {
     setForm((current) => ({
