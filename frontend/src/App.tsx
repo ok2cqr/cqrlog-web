@@ -1481,7 +1481,15 @@ export default function App() {
     };
   }, [radioSyncConfig, pageVisible]);
 
+  const previousModeRef = useRef(form.mode);
+
   useEffect(() => {
+    if (previousModeRef.current === form.mode) {
+      return;
+    }
+
+    previousModeRef.current = form.mode;
+
     setForm((current) => ({
       ...current,
       rstSent: form.mode === 'CW' ? '599' : '59',
@@ -1940,7 +1948,7 @@ export default function App() {
   }, [qsoListCallsignInput]);
 
   useEffect(() => {
-    if (viewMode !== 'list') {
+    if (viewMode !== 'list' || authState !== 'logged-in') {
       return undefined;
     }
 
@@ -2003,10 +2011,11 @@ export default function App() {
     qsoList.sortDirection,
     qsoListReloadKey,
     viewMode,
+    authState,
   ]);
 
   useEffect(() => {
-    if (viewMode !== 'contest') {
+    if (viewMode !== 'contest' || authState !== 'logged-in') {
       return undefined;
     }
 
@@ -2070,10 +2079,10 @@ export default function App() {
       cancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, [contestName, contestQsoReloadKey, viewMode]);
+  }, [contestName, contestQsoReloadKey, viewMode, authState]);
 
   useEffect(() => {
-    if (viewMode !== 'cluster' || !pageVisible) {
+    if (viewMode !== 'cluster' || !pageVisible || authState !== 'logged-in') {
       return undefined;
     }
 
@@ -2138,7 +2147,7 @@ export default function App() {
       cancelled = true;
       window.clearInterval(intervalId);
     };
-  }, [dxClusterReloadKey, viewMode, pageVisible]);
+  }, [dxClusterReloadKey, viewMode, pageVisible, authState]);
 
   function updateField<K extends keyof FormState>(field: K, value: FormState[K]): void {
     setForm((current) => ({
