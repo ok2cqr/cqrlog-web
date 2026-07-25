@@ -56,6 +56,7 @@ RUN a2enconf servername \
 WORKDIR /var/www/html
 
 COPY . .
+RUN printf 'APP_ENV=prod\nAPP_DEBUG=0\n' > .env
 COPY --from=composer_deps /app/vendor ./vendor
 COPY --from=frontend_build /app/frontend/dist/ ./public/
 

@@ -1,10 +1,17 @@
 .git
 .gitignore
 .idea
+.DS_Store
+.editorconfig
+.env*
+.phpunit.cache
+.superpowers
 _old
+docs
 frontend/dist
 frontend/node_modules
 node_modules
 tests
 var
 vendor
+*.sql
