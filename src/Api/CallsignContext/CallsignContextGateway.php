@@ -220,7 +220,7 @@ final readonly class CallsignContextGateway
             if ($orderedValue !== null) {
                 $parts = array_map('trim', explode(';', $orderedValue, 2));
 
-                if (($parts[0] ?? '') !== '') {
+                if ($parts[0] !== '') {
                     return $parts[0];
                 }
 

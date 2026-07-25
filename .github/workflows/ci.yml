@@ -49,6 +49,9 @@ jobs:
       - name: Run PHPUnit
         run: vendor/bin/phpunit
 
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse
+
   frontend:
     runs-on: ubuntu-latest
 

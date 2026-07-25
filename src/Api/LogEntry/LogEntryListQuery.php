@@ -88,6 +88,10 @@ final readonly class LogEntryListQuery
         return ($this->page - 1) * $this->perPage;
     }
 
+    /**
+     * @param array<string, mixed> $query
+     * @param array<string, list<string>> $fieldErrors
+     */
     private static function normalizePositiveInt(array $query, string $field, int $default, array &$fieldErrors): int
     {
         if (!array_key_exists($field, $query) || $query[$field] === '' || $query[$field] === null) {
@@ -118,6 +122,10 @@ final readonly class LogEntryListQuery
         return $normalized;
     }
 
+    /**
+     * @param array<string, mixed> $query
+     * @param array<string, list<string>> $fieldErrors
+     */
     private static function normalizeOptionalString(array $query, string $field, int $maxLength, bool $uppercase, array &$fieldErrors): ?string
     {
         if (!array_key_exists($field, $query) || $query[$field] === null || $query[$field] === '') {
@@ -144,6 +152,10 @@ final readonly class LogEntryListQuery
         return $uppercase ? strtoupper($value) : $value;
     }
 
+    /**
+     * @param array<string, mixed> $query
+     * @param array<string, list<string>> $fieldErrors
+     */
     private static function normalizeOptionalDate(array $query, string $field, array &$fieldErrors): ?string
     {
         if (!array_key_exists($field, $query) || $query[$field] === null || $query[$field] === '') {
@@ -168,6 +180,10 @@ final readonly class LogEntryListQuery
         return $value;
     }
 
+    /**
+     * @param array<string, mixed> $query
+     * @param array<string, list<string>> $fieldErrors
+     */
     private static function normalizeSortBy(array $query, array &$fieldErrors): string
     {
         if (!array_key_exists('sortBy', $query) || $query['sortBy'] === null || $query['sortBy'] === '') {
@@ -196,6 +212,10 @@ final readonly class LogEntryListQuery
         return $value;
     }
 
+    /**
+     * @param array<string, mixed> $query
+     * @param array<string, list<string>> $fieldErrors
+     */
     private static function normalizeSortDirection(array $query, array &$fieldErrors): string
     {
         if (!array_key_exists('sortDirection', $query) || $query['sortDirection'] === null || $query['sortDirection'] === '') {
@@ -224,6 +244,9 @@ final readonly class LogEntryListQuery
         return $value;
     }
 
+    /**
+     * @param array<string, list<string>> $fieldErrors
+     */
     private static function addFieldError(array &$fieldErrors, string $field, string $message): void
     {
         $fieldErrors[$field] ??= [];

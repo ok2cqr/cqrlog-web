@@ -1,0 +1,541 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$award\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$band\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$callsign\.$#'
+			identifier: property.notFound
+			count: 3
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$club_nr\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$county\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$fromdate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$id_cqrlog_main\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$id_notes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$iota\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$itu\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$loc\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$longremarks\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$mode\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$qsl_via\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$qsodate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$qth\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$state\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$time_off\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$time_on\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$todate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$waz\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/CallsignContext/CallsignContextGateway.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$adif\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$award\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$band\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$callsign\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$club_nr1\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$club_nr2\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$club_nr3\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$club_nr4\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$club_nr5\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$cont\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$contestname\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$county\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$dok\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$dxcc_ref\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$eqsl_qsl_rcvd\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$eqsl_qsl_sent\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$eqsl_qslrdate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$eqsl_qslsdate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$freq\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$id_cqrlog_main\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$idcall\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$iota\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$itu\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$loc\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$lotw_qslr\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$lotw_qslrdate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$lotw_qsls\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$lotw_qslsdate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$mode\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$my_loc\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$operator\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$profile\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$prop_mode\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$pwr\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$qsl_r\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$qsl_s\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$qsl_via\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$qslr_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$qsls_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$qso_dxcc\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$qsodate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$qth\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$remarks\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$rst_r\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$rst_s\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$rxfreq\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$satellite\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$srx\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$srx_string\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$state\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$stx\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$stx_string\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$time_off\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$time_on\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$waz\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LogEntry/LogEntryMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$id_long_note\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LongNote/LongNoteMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$note\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/LongNote/LongNoteMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$callsign\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/Note/NoteMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$id_notes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/Note/NoteMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$longremarks\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/Note/NoteMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$id_profiles\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/Profile/ProfileMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$locator\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/Profile/ProfileMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$nr\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/Profile/ProfileMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$qth\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/Profile/ProfileMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$remarks\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/Profile/ProfileMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$rig\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/Profile/ProfileMapper.php
+
+		-
+			message: '#^Access to an undefined property Dibi\\Row\:\:\$visible\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Api/Profile/ProfileMapper.php
