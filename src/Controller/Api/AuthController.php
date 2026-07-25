@@ -30,7 +30,7 @@ final class AuthController extends AbstractController
                     'code' => 'auth_not_configured',
                     'message' => 'Authentication is not configured.',
                 ],
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            ], Response::HTTP_SERVICE_UNAVAILABLE);
         }
 
         $clientIp = $request->getClientIp() ?? 'unknown';

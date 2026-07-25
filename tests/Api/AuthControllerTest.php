@@ -204,6 +204,29 @@ final class AuthControllerTest extends WebTestCase
     }
 
     #[Test]
+    public function protectedEndpointReturns503WhenAuthNotConfigured(): void
+    {
+        $_SERVER['LOGIN_USERNAME'] = '';
+        $_SERVER['LOGIN_PASSWORD'] = '';
+
+        try {
+            $this->client->request('GET', '/api/profiles');
+
+            self::assertResponseStatusCodeSame(Response::HTTP_SERVICE_UNAVAILABLE);
+
+            $payload = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+            self::assertSame('auth_not_configured', $payload['error']['code']);
+
+            $this->client->request('GET', '/api/health');
+
+            self::assertResponseIsSuccessful();
+        } finally {
+            unset($_SERVER['LOGIN_USERNAME'], $_SERVER['LOGIN_PASSWORD']);
+        }
+    }
+
+    #[Test]
     public function idleTimeoutDoesNotExpireActiveSessions(): void
     {
         $_SERVER['SESSION_IDLE_TIMEOUT_SECONDS'] = '300';

@@ -100,6 +100,47 @@ For a new release:
 docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
 ```
 
+## Security checklist / secret rotation
+
+Images built before the `.dockerignore` fix (see repository history) bake
+`.env.prod` and SQL dumps into their layers. If you have ever deployed such
+an image, treat every secret it could have exposed as compromised and
+rotate:
+
+1. Generate a fresh `APP_SECRET` and put it in `.env.prod`:
+
+   ```bash
+   php -r "echo bin2hex(random_bytes(32));"
+   ```
+
+2. Rotate the production database password, both on the MariaDB server
+   and in `DB_PASSWORD` in `.env.prod`.
+
+3. Rotate `LOGIN_PASSWORD` in `.env.prod`.
+
+4. Rebuild and redeploy with the new secrets:
+
+   ```bash
+   make prod
+   ```
+
+5. Purge every previously built image — each one built before this fix
+   contains `.env.prod` and the SQL dumps in its layers, even if the
+   running container has since been replaced. Remove local copies
+   (`docker image rm`) and purge any copies pushed to a registry or kept
+   in backups.
+
+6. Confirm no env file or SQL dump was ever committed to the repository:
+
+   ```bash
+   git log --all --oneline -- .env.prod .env.local cqrlog002-data.sql
+   ```
+
+   This should print nothing.
+
+7. Rotating `APP_SECRET` and `LOGIN_PASSWORD` invalidates all active
+   sessions; every logged-in user will need to log in again.
+
 ## Operational notes
 
 - `GET /api/health` is the simplest smoke test.

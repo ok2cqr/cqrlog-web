@@ -43,6 +43,13 @@ final class AuthSubscriber implements EventSubscriberInterface
         }
 
         if (!$this->isAuthConfigured()) {
+            $event->setResponse(new JsonResponse([
+                'error' => [
+                    'code' => 'auth_not_configured',
+                    'message' => 'Authentication is not configured.',
+                ],
+            ], Response::HTTP_SERVICE_UNAVAILABLE));
+
             return;
         }
 
