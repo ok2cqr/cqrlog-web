@@ -264,6 +264,8 @@ type ConfirmState = {
   onConfirm: () => void;
 } | null;
 
+type Toast = { id: number; kind: 'success' | 'error'; text: string };
+
 const STORAGE_KEYS = {
   band: 'cqrlog.band',
   mode: 'cqrlog.mode',
@@ -1055,11 +1057,9 @@ export default function App() {
   });
   const [dxClusterReloadKey, setDxClusterReloadKey] = useState(0);
   const [qsoListReloadKey, setQsoListReloadKey] = useState(0);
-  const [qsoListFeedback, setQsoListFeedback] = useState<{ status: 'idle' | 'saved' | 'error'; message: string }>({
-    status: 'idle',
-    message: '',
-  });
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const toastIdRef = useRef(0);
   const initialContestSettingsRef = useRef<ContestSettings | null>(null);
 
   if (initialContestSettingsRef.current === null) {
@@ -2282,6 +2282,25 @@ export default function App() {
     setConfirmState(null);
   }
 
+  function pushToast(kind: Toast['kind'], text: string): void {
+    toastIdRef.current += 1;
+
+    const id = toastIdRef.current;
+
+    setToasts((current) => [...current, { id, kind, text }]);
+
+    window.setTimeout(
+      () => {
+        setToasts((current) => current.filter((toast) => toast.id !== id));
+      },
+      kind === 'error' ? 6000 : 4000,
+    );
+  }
+
+  function dismissToast(id: number): void {
+    setToasts((current) => current.filter((toast) => toast.id !== id));
+  }
+
   function closeProfileDialog(): void {
     setProfileDialog({
       status: 'closed',
@@ -2412,12 +2431,9 @@ export default function App() {
               ...current,
               defaultProfileId: current.defaultProfileId === profileToDelete.id ? null : current.defaultProfileId,
             }));
+            pushToast('success', `Deleted profile #${profileToDelete.number}.`);
           } catch (error) {
-            setProfiles((current) => ({
-              ...current,
-              status: 'error',
-              message: error instanceof Error ? error.message : 'Unable to delete profile.',
-            }));
+            pushToast('error', error instanceof Error ? error.message : 'Unable to delete profile.');
           }
         })();
       },
@@ -2448,10 +2464,6 @@ export default function App() {
   }
 
   async function openEditDialog(entryId: number): Promise<void> {
-    setQsoListFeedback({
-      status: 'idle',
-      message: '',
-    });
     setEditDialog({
       status: 'loading',
       entryId,
@@ -2836,10 +2848,7 @@ export default function App() {
       }
 
       closeEditDialog();
-      setQsoListFeedback({
-        status: 'saved',
-        message: `Updated QSO #${updatedEntry.id}.`,
-      });
+      pushToast('success', `Updated QSO #${updatedEntry.id}.`);
       setQsoListReloadKey((current) => current + 1);
     } catch (error) {
       setEditDialog((current) => ({
@@ -2876,10 +2885,7 @@ export default function App() {
           try {
             await deleteLogEntry(entryId);
             closeEditDialog();
-            setQsoListFeedback({
-              status: 'saved',
-              message: `Deleted QSO #${entryId}.`,
-            });
+            pushToast('success', `Deleted QSO #${entryId}.`);
             setQsoListReloadKey((current) => current + 1);
           } catch (error) {
             setEditDialog((current) => ({
@@ -3852,17 +3858,6 @@ export default function App() {
               </div>
             </header>
 
-            {qsoListFeedback.message !== '' ? (
-              <p
-                className={
-                  qsoListFeedback.status === 'error'
-                    ? 'submission-message submission-message--error'
-                    : 'submission-message'
-                }
-              >
-                {qsoListFeedback.message}
-              </p>
-            ) : null}
             {qsoList.status === 'error' ? <p className="submission-message submission-message--error">{qsoList.message}</p> : null}
             {qsoList.status === 'loading' ? <p className="list-status">Loading QSO list…</p> : null}
 
@@ -4687,6 +4682,20 @@ export default function App() {
           </div>
         ) : null}
       </main>
+      {toasts.length > 0 ? (
+        <div className="toast-host" aria-live="polite">
+          {toasts.map((toast) => (
+            <div
+              key={toast.id}
+              className={toast.kind === 'error' ? 'toast toast--error' : 'toast toast--success'}
+              role="status"
+              onClick={() => dismissToast(toast.id)}
+            >
+              {toast.text}
+            </div>
+          ))}
+        </div>
+      ) : null}
       {confirmState !== null ? (
         <div
           className="dialog-backdrop dialog-backdrop--confirm"
