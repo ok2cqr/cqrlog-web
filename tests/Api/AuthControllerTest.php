@@ -58,6 +58,38 @@ final class AuthControllerTest extends WebTestCase
     }
 
     #[Test]
+    public function loginRotatesSessionId(): void
+    {
+        $this->client->request('POST', '/api/auth/login', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], json_encode(['username' => 'testuser', 'password' => 'testpass']));
+
+        self::assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $firstSessionId = $this->client->getCookieJar()->get('MOCKSESSID')?->getValue();
+        self::assertNotNull($firstSessionId);
+
+        $this->client->request('POST', '/api/auth/login', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], json_encode(['username' => 'testuser', 'password' => 'testpass']));
+
+        self::assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $secondSessionId = $this->client->getCookieJar()->get('MOCKSESSID')?->getValue();
+        self::assertNotNull($secondSessionId);
+
+        self::assertNotSame($firstSessionId, $secondSessionId);
+
+        $this->client->request('GET', '/api/auth/status');
+
+        self::assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $payload = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertTrue($payload['authenticated']);
+    }
+
+    #[Test]
     public function statusReturnsUnauthenticatedBeforeLogin(): void
     {
         $this->client->request('GET', '/api/auth/status');

@@ -84,6 +84,7 @@ final class AuthController extends AbstractController
         $this->rateLimiter->reset($clientIp);
 
         $session = $request->getSession();
+        $session->migrate(true);
         $session->set('_authenticated', true);
         $session->set('_last_activity', time());
 
