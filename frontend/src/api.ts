@@ -1,6 +1,8 @@
 import type {
   CallsignContext,
   DxccData,
+  HamqthSolarData,
+  HamqthSpot,
   LogEntryListResponse,
   LogEntryPayload,
   LogEntryResponse,
@@ -292,26 +294,24 @@ export async function getRadioState(url: string): Promise<RadioStateResponse> {
   return JSON.parse(responseText) as RadioStateResponse;
 }
 
-export async function getDxClusterFeed(url: string): Promise<string> {
+const HAMQTH_SPOTS_URL = 'https://www.hamqth.com/api/v2/spots?limit=10';
+const HAMQTH_SOLAR_URL = 'https://www.hamqth.com/api/v2/solar';
+
+async function getHamqthJson<T>(url: string, label: string): Promise<T> {
   const response = await fetch(url);
 
   if (!response.ok) {
-    throw new Error(`DX Cluster request failed with status ${response.status}.`);
+    throw new Error(`${label} request failed with status ${response.status}.`);
   }
 
-  return response.text();
+  return response.json() as Promise<T>;
 }
 
-export async function getSolarDataFeed(url: string): Promise<string> {
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`Solar data request failed with status ${response.status}.`);
-  }
-
-  return response.text();
+export async function getDxClusterSpots(): Promise<HamqthSpot[]> {
+  const data = await getHamqthJson<{ spots?: HamqthSpot[] }>(HAMQTH_SPOTS_URL, 'DX Cluster');
+  return data.spots ?? [];
 }
 
-export function getSolarData(): Promise<string> {
-  return getSolarDataFeed('/api/solarData');
+export function getSolarData(): Promise<HamqthSolarData> {
+  return getHamqthJson<HamqthSolarData>(HAMQTH_SOLAR_URL, 'Solar data');
 }

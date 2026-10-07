@@ -198,8 +198,7 @@ Additional frontend work completed after initial handoff:
 - sidebar now also includes a dedicated `DX Cluster` section with a globe icon
 - `DX Cluster` is no longer a placeholder inside the entry form; it has its own full view
 - frontend DX Cluster view now:
-  - loads `https://www.hamqth.com/dxc_csv.php?limit=10`
-  - parses rows separated by newlines and fields separated by `^`
+  - loads `https://www.hamqth.com/api/v2/spots?limit=10` (JSON)
   - auto-refreshes every 20 seconds
   - supports immediate manual reload via `Reload`
   - shows columns in this order:
@@ -212,12 +211,8 @@ Additional frontend work completed after initial handoff:
   - `GF`
   - update timestamp from the feed
 - important implementation detail:
-  - HamQTH `dxc_csv.php` currently sends CORS headers and can be fetched directly from the browser
-  - HamQTH `solar_data1.dat` does not send usable CORS headers for frontend fetches
-  - because of that, solar data is proxied through backend endpoint `/api/solarData`
-  - backend implementation:
-    - `/Users/petr/Projects/private/con/src/Api/SolarData/SolarDataGateway.php`
-    - `/Users/petr/Projects/private/con/src/Controller/Api/SolarDataController.php`
+  - both feeds use the HamQTH public API v2 (https://www.hamqth.com/developers) and are fetched directly from the browser (CORS `*`)
+  - solar data: `https://www.hamqth.com/api/v2/solar`; the old backend proxy `/api/solarData` was removed (2026-10-07) after `solar_data1.dat` started returning 404
 
 UI still intentionally placeholder-only for:
 

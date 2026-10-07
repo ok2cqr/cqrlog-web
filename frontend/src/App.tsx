@@ -8,7 +8,7 @@ import {
   deleteProfile,
   getAuthStatus,
   getCallsignContext,
-  getDxClusterFeed,
+  getDxClusterSpots,
   getDxcc,
   getFrontendConfig,
   getLogEntries,
@@ -27,6 +27,8 @@ import type {
   CallsignAutofill,
   ClubMembership,
   DxccData,
+  HamqthSolarData,
+  HamqthSpot,
   LogEntryListItem,
   LogEntryPayload,
   LogEntryResponse,
@@ -203,12 +205,8 @@ type DxClusterItem = {
   dx: string;
   info: string;
   spottedAt: string;
-  lotw: string;
-  eqsl: string;
   continent: string;
-  band: string;
   country: string;
-  adif: string;
 };
 
 type DxClusterState = {
@@ -333,7 +331,6 @@ const CONTEST_ARROW_NAV_ORDER: ContestArrowField[] = [
   'serialReceived',
   'msgReceived',
 ];
-const DX_CLUSTER_URL = 'https://www.hamqth.com/dxc_csv.php?limit=10';
 const DX_CLUSTER_POLL_INTERVAL_MS = 20_000;
 const defaultFrequencyByBand: Record<string, string> = {
   '160M': '1.8250',
@@ -892,46 +889,23 @@ function getNextProfileNumber(profiles: Profile[]): number {
   return profiles.reduce((maxNumber, profile) => Math.max(maxNumber, profile.number), 0) + 1;
 }
 
-function parseDxClusterFeed(responseText: string): DxClusterItem[] {
-  return responseText
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line !== '')
-    .map((line, index) => {
-      const [
-        spotter = '',
-        frequency = '',
-        dx = '',
-        info = '',
-        spottedAt = '',
-        lotw = '',
-        eqsl = '',
-        continent = '',
-        band = '',
-        country = '',
-        adif = '',
-      ] = line.split('^');
-
-      return {
-        id: `${index}-${spotter}-${frequency}-${dx}-${spottedAt}`,
-        spotter,
-        frequency,
-        dx,
-        info,
-        spottedAt,
-        lotw,
-        eqsl,
-        continent,
-        band,
-        country,
-        adif,
-      };
-    });
+function toDxClusterItem(spot: HamqthSpot, index: number): DxClusterItem {
+  return {
+    id: `${index}-${spot.spotter}-${spot.freq}-${spot.dxcall}-${spot.time}`,
+    spotter: spot.spotter,
+    frequency: spot.freq.toFixed(1),
+    dx: spot.dxcall,
+    info: spot.comment ?? '',
+    spottedAt: spot.time.replace('T', ' ').slice(0, 16),
+    continent: spot.continent ?? '',
+    country: spot.country ?? '',
+  };
 }
 
-function parseSolarDataSummary(responseText: string): string {
-  const [sfi = '-', a = '-', k = '-', gf = '-', ssn = '-', updatedAt = '-'] = responseText.trim().split('|');
-  return `Solar data: A: ${a} | K: ${k} | SFI: ${sfi} | SSN: ${ssn} | GF: ${gf} | Updated: ${updatedAt}`;
+function formatSolarDataSummary(solar: HamqthSolarData): string {
+  const show = (value: number | string | null) => (value === null ? '-' : String(value));
+  const updatedAt = solar.fetchedAt === null ? '-' : solar.fetchedAt.replace('T', ' ').slice(0, 16);
+  return `Solar data: A: ${show(solar.aIndex)} | K: ${show(solar.kIndex)} | SFI: ${show(solar.solarFlux)} | SSN: ${show(solar.sunspotNumber)} | GF: ${show(solar.geomagneticField)} | Updated: ${updatedAt}`;
 }
 
 export default function App() {
@@ -2103,8 +2077,8 @@ export default function App() {
       }));
 
       try {
-        const [responseText, solarResponseText] = await Promise.all([
-          getDxClusterFeed(DX_CLUSTER_URL),
+        const [spots, solarData] = await Promise.all([
+          getDxClusterSpots(),
           getSolarData(),
         ]);
 
@@ -2112,8 +2086,8 @@ export default function App() {
           return;
         }
 
-        const items = parseDxClusterFeed(responseText);
-        const solarSummary = parseSolarDataSummary(solarResponseText);
+        const items = spots.map(toDxClusterItem);
+        const solarSummary = formatSolarDataSummary(solarData);
 
         setDxCluster({
           status: 'ready',

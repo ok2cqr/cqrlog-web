@@ -141,3 +141,29 @@ export type ProfileListResponse = {
   items: Profile[];
   totalCount: number;
 };
+
+// HamQTH public API v2 (https://www.hamqth.com/developers), fetched directly from the browser.
+export type HamqthSpot = {
+  spotter: string;
+  dxcall: string;
+  freq: number;
+  band: string | null;
+  mode: string | null;
+  comment: string | null;
+  time: string;
+  dxcc: number | null;
+  country: string | null;
+  continent: string | null;
+  lotw: boolean;
+  eqsl: boolean;
+};
+
+export type HamqthSolarData = {
+  solarFlux: number | null;
+  aIndex: number | null;
+  kIndex: number | null;
+  sunspotNumber: number | null;
+  geomagneticField: string | null;
+  indicesDate: string | null;
+  fetchedAt: string | null;
+};

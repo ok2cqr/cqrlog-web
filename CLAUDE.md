@@ -33,7 +33,6 @@ backend root (repo root):
       Note/                       # Short notes per callsign
       LongNote/                   # Long notes
       Profile/                    # Radio profiles
-      SolarData/                  # Solar data proxy
       Exception/                  # ApiException, ValidationException, etc.
       Http/                       # JsonRequestDecoder
     Controller/
@@ -117,7 +116,6 @@ Test files:
 |---|---|---|
 | `callsignContext` | local DB | Autofill helper - note, clubs, recent QSOs |
 | `dxcc` | HamQTH proxy | DXCC metadata lookup |
-| `solarData` | HamQTH proxy | Solar data for DX Cluster view |
 | `frontendConfig` | env vars | Radio sync defaults |
 | `health` | internal | Health check |
 
@@ -181,16 +179,15 @@ Additional per-resource files as needed:
 - DXCC lookup via HamQTH
 - QSO list with pagination and edit modal
 - Radio sync (JSON endpoint polling, configurable URL/interval)
-- DX Cluster view (HamQTH CSV feed, auto-refresh)
+- DX Cluster view (HamQTH API v2 spots, auto-refresh)
 - Solar data display (A, K, SFI, SSN, GF)
 - Settings: dark mode, QTH profile, radio sync config
 - Sidebar navigation: QSO entry (+), QSO list, DX Cluster, Settings
 
 ## External Dependencies
 
-- **HamQTH** (`www.hamqth.com`): DXCC lookups, DX Cluster CSV, solar data
-  - DX Cluster CSV is fetched directly from browser (has CORS)
-  - Solar data is proxied through backend (no CORS from HamQTH)
+- **HamQTH** (`www.hamqth.com`): DXCC lookups, DX Cluster spots, solar data
+  - DX Cluster spots (`/api/v2/spots`) and solar data (`/api/v2/solar`) are fetched directly from the browser (JSON, CORS enabled)
   - If HamQTH is down, `/api/dxcc` returns `502`
 - **pico-radio-gateway**: Optional JSON API for radio frequency/mode sync
 
