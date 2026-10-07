@@ -167,3 +167,31 @@ export type HamqthSolarData = {
   indicesDate: string | null;
   fetchedAt: string | null;
 };
+
+export type HamqthRbnSkimmer = {
+  call: string;
+  snr: number;
+};
+
+export type HamqthRbnSpot = {
+  dxcall: string;
+  band: string | null;
+  mode: string | null;
+  freq: number;
+  age: number;
+  skimmers: HamqthRbnSkimmer[];
+};
+
+// Returned by /rbn with include=locations; grid is deliberately limited to 4 characters (1° × 2° square).
+export type HamqthRbnLocation = {
+  call: string;
+  grid: string | null;
+  lat: number;
+  lon: number;
+  source: 'skimmer' | 'callbook' | 'dxcc';
+};
+
+export type HamqthRbnResponse = {
+  spots: HamqthRbnSpot[];
+  locations: HamqthRbnLocation[];
+};

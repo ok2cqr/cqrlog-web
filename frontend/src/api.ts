@@ -1,6 +1,7 @@
 import type {
   CallsignContext,
   DxccData,
+  HamqthRbnResponse,
   HamqthSolarData,
   HamqthSpot,
   LogEntryListResponse,
@@ -296,6 +297,7 @@ export async function getRadioState(url: string): Promise<RadioStateResponse> {
 
 const HAMQTH_SPOTS_URL = 'https://www.hamqth.com/api/v2/spots?limit=10';
 const HAMQTH_SOLAR_URL = 'https://www.hamqth.com/api/v2/solar';
+const HAMQTH_RBN_URL = 'https://www.hamqth.com/api/v2/rbn';
 
 async function getHamqthJson<T>(url: string, label: string): Promise<T> {
   const response = await fetch(url);
@@ -314,4 +316,14 @@ export async function getDxClusterSpots(): Promise<HamqthSpot[]> {
 
 export function getSolarData(): Promise<HamqthSolarData> {
   return getHamqthJson<HamqthSolarData>(HAMQTH_SOLAR_URL, 'Solar data');
+}
+
+export async function getRbnSpots(calls: string[], maxAgeSeconds: number): Promise<HamqthRbnResponse> {
+  const params = new URLSearchParams({
+    calls: calls.join(','),
+    maxAge: String(maxAgeSeconds),
+    include: 'locations',
+  });
+  const data = await getHamqthJson<Partial<HamqthRbnResponse>>(`${HAMQTH_RBN_URL}?${params}`, 'RBN');
+  return { spots: data.spots ?? [], locations: data.locations ?? [] };
 }

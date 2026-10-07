@@ -1,4 +1,5 @@
 import { useDeferredValue, useEffect, useRef, useState } from 'react';
+import { RbnView } from './RbnView';
 import type { Dispatch, KeyboardEvent as ReactKeyboardEvent, SetStateAction } from 'react';
 import {
   createProfile,
@@ -91,7 +92,7 @@ type DxccState = {
 };
 
 type RadioSyncState = 'idle' | 'online' | 'offline';
-type ViewMode = 'entry' | 'list' | 'settings' | 'cluster' | 'contest';
+type ViewMode = 'entry' | 'list' | 'settings' | 'cluster' | 'rbn' | 'contest';
 type ThemePreference = 'auto' | 'light' | 'dark';
 type ResolvedTheme = 'light' | 'dark';
 
@@ -100,6 +101,7 @@ type FrontendSettings = {
   defaultProfileId: number | null;
   showHiddenProfiles: boolean;
   showContestClubs: boolean;
+  myCallsign: string;
 };
 
 type RadioSyncConfig = {
@@ -288,13 +290,14 @@ const STORAGE_KEYS = {
 } as const;
 
 const ENTRY_DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
-const viewModeOptions: ViewMode[] = ['entry', 'list', 'settings', 'cluster', 'contest'];
+const viewModeOptions: ViewMode[] = ['entry', 'list', 'settings', 'cluster', 'rbn', 'contest'];
 
 const DEFAULT_FRONTEND_SETTINGS: FrontendSettings = {
   theme: 'auto',
   defaultProfileId: null,
   showHiddenProfiles: false,
   showContestClubs: false,
+  myCallsign: '',
 };
 
 const bandOptions = ['160M', '80M', '60M', '40M', '30M', '20M', '17M', '15M', '12M', '10M', '6M', '2M'];
@@ -520,6 +523,10 @@ function readInitialFrontendSettingsState(): InitialFrontendSettingsState {
           typeof parsed.showContestClubs === 'boolean'
             ? parsed.showContestClubs
             : DEFAULT_FRONTEND_SETTINGS.showContestClubs,
+        myCallsign:
+          typeof parsed.myCallsign === 'string'
+            ? parsed.myCallsign.trim().toUpperCase()
+            : DEFAULT_FRONTEND_SETTINGS.myCallsign,
       },
     };
   } catch {
@@ -2153,6 +2160,10 @@ export default function App() {
     setViewMode('cluster');
   }
 
+  function openRbnView(): void {
+    setViewMode('rbn');
+  }
+
   function openContestView(): void {
     setViewMode('contest');
   }
@@ -2312,7 +2323,7 @@ export default function App() {
   }
 
   function resetFrontendSettings(): void {
-    setSettings({ ...DEFAULT_FRONTEND_SETTINGS });
+    setSettings((current) => ({ ...DEFAULT_FRONTEND_SETTINGS, myCallsign: current.myCallsign }));
   }
 
   function closeConfirm(): void {
@@ -3029,6 +3040,7 @@ export default function App() {
   const isListView = viewMode === 'list';
   const isSettingsView = viewMode === 'settings';
   const isClusterView = viewMode === 'cluster';
+  const isRbnView = viewMode === 'rbn';
   const canGoToPreviousQsoPage = qsoList.page > 1;
   const canGoToNextQsoPage = qsoList.page < qsoList.totalPages;
   const hasActiveQsoListFilters =
@@ -3135,6 +3147,19 @@ export default function App() {
               <path d="M12 3.5c2.3 2.2 3.7 5.2 3.7 8.5S14.3 18.3 12 20.5C9.7 18.3 8.3 15.3 8.3 12S9.7 5.7 12 3.5Z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
               <path d="M6.1 7.8c1.6.7 3.8 1.1 5.9 1.1s4.3-.4 5.9-1.1" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
               <path d="M6.1 16.2c1.6-.7 3.8-1.1 5.9-1.1s4.3.4 5.9 1.1" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            </svg>
+          </button>
+          <button
+            className={isRbnView ? 'sidebar__menu sidebar__button--active' : 'sidebar__menu'}
+            type="button"
+            aria-label="RBN"
+            title="RBN — where am I heard"
+            onClick={openRbnView}
+          >
+            <svg className="sidebar__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="13" r="1.8" fill="currentColor" />
+              <path d="M8.6 9.6a4.8 4.8 0 0 0 0 6.8M15.4 9.6a4.8 4.8 0 0 1 0 6.8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              <path d="M5.8 6.8a8.8 8.8 0 0 0 0 12.4M18.2 6.8a8.8 8.8 0 0 1 0 12.4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
             </svg>
           </button>
           <button
@@ -4476,6 +4501,12 @@ export default function App() {
               </div>
             ) : null}
           </section>
+        ) : isRbnView ? (
+          <RbnView
+            active={pageVisible && authState === 'logged-in'}
+            defaultCallsign={settings.myCallsign}
+            homeLocator={selectedProfile?.locator ?? null}
+          />
         ) : isClusterView ? (
           <section className="panel panel--list">
             <header className="list-header">
@@ -4568,6 +4599,30 @@ export default function App() {
                     <option value="light">Light</option>
                     <option value="dark">Dark</option>
                   </select>
+                </label>
+              </section>
+
+              <section className="settings-card">
+                <div className="settings-card__header">
+                  <h3 className="settings-card__title">Station</h3>
+                  <p className="settings-card__subtle">Your own callsign, used as the default in the RBN view.</p>
+                </div>
+
+                <label className="setting-row">
+                  <div>
+                    <span className="setting-row__title">My callsign</span>
+                    <p className="setting-row__description">Portable forms (/P, DL/…) are matched automatically on RBN.</p>
+                  </div>
+                  <input
+                    className="settings-select settings-input--callsign"
+                    type="text"
+                    value={settings.myCallsign}
+                    onChange={(event) => updateSetting('myCallsign', event.target.value.trim().toUpperCase())}
+                    placeholder="e.g. OK2CQR"
+                    autoCapitalize="characters"
+                    autoCorrect="off"
+                    spellCheck={false}
+                  />
                 </label>
               </section>
 

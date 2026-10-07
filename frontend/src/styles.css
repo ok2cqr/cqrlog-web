@@ -1609,3 +1609,111 @@ textarea {
     margin-left: 0;
   }
 }
+
+/* RBN view */
+.rbn-callsign-input {
+  width: 190px;
+  flex: 0 1 190px;
+}
+
+.settings-input--callsign {
+  text-transform: uppercase;
+}
+
+.rbn-bands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.rbn-band {
+  min-height: 36px;
+  padding: 0 0.8rem;
+  border: 1px solid rgba(16, 32, 51, 0.14);
+  border-radius: 999px;
+  background: rgba(250, 252, 255, 0.94);
+  color: #33485f;
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+
+.rbn-band--active {
+  border-color: rgba(11, 112, 227, 0.55);
+  background: rgba(11, 112, 227, 0.12);
+  color: #0b4f9e;
+}
+
+.rbn-map {
+  height: 360px;
+  border-radius: 15px;
+  overflow: hidden;
+  border: 1px solid rgba(16, 32, 51, 0.1);
+  z-index: 0;
+}
+
+.rbn-map-note {
+  margin: -0.4rem 0 0;
+  color: #6d8198;
+  font-size: 0.8rem;
+}
+
+.rbn-table {
+  display: block;
+}
+
+.cluster-table__head.rbn-table__row,
+.cluster-table__row.rbn-table__row {
+  grid-template-columns: 84px minmax(80px, 1fr) 68px 62px 68px 72px 54px;
+  gap: 0.5rem;
+  min-width: 540px;
+  align-items: center;
+}
+
+.cluster-table__head.rbn-table__row--heard,
+.cluster-table__row.rbn-table__row--heard {
+  grid-template-columns: 84px minmax(80px, 1fr) 68px 62px 68px 72px minmax(80px, 0.8fr) 54px;
+  min-width: 640px;
+}
+
+.rbn-table .cluster-table__empty {
+  grid-template-columns: 1fr;
+}
+
+.rbn-table__call {
+  font-weight: 700;
+}
+
+.rbn-snr {
+  display: inline-block;
+  min-width: 48px;
+  padding: 0.12rem 0.4rem;
+  border-radius: 7px;
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+:root[data-theme='dark'] .rbn-band {
+  background: rgba(18, 27, 39, 0.92);
+  border-color: rgba(139, 162, 188, 0.2);
+  color: #c4d2e3;
+}
+
+:root[data-theme='dark'] .rbn-band--active {
+  background: rgba(59, 130, 246, 0.22);
+  border-color: rgba(96, 165, 250, 0.6);
+  color: #dbeafe;
+}
+
+:root[data-theme='dark'] .rbn-map {
+  border-color: rgba(139, 162, 188, 0.16);
+}
+
+:root[data-theme='dark'] .rbn-map .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9);
+}
+
+:root[data-theme='dark'] .rbn-map-note {
+  color: #8ba2bc;
+}

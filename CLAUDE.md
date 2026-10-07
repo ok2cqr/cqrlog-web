@@ -50,6 +50,7 @@ backend root (repo root):
 frontend/:
   src/
     App.tsx                       # Main React component (large, single-file app)
+    RbnView.tsx / RbnMap.tsx      # RBN view (table + Leaflet map)
     api.ts                        # API client methods
     types.ts                      # TypeScript type definitions
     styles.css                    # All styling including dark mode
@@ -181,13 +182,15 @@ Additional per-resource files as needed:
 - Radio sync (JSON endpoint polling, configurable URL/interval)
 - DX Cluster view (HamQTH API v2 spots, auto-refresh)
 - Solar data display (A, K, SFI, SSN, GF)
+- RBN view (`RbnView.tsx` + Leaflet `RbnMap.tsx`): where a callsign is heard by skimmers (HamQTH `/api/v2/rbn`, 30 s polling), map + table, band filter; station positions come in the same response (`include=locations`, 4-char grid)
 - Settings: dark mode, QTH profile, radio sync config
-- Sidebar navigation: QSO entry (+), QSO list, DX Cluster, Settings
+- Sidebar navigation: QSO entry (+), Contest, QSO list, DX Cluster, RBN, Settings
+- Settings → Station → My callsign (default callsign for the RBN view)
 
 ## External Dependencies
 
-- **HamQTH** (`www.hamqth.com`): DXCC lookups, DX Cluster spots, solar data
-  - DX Cluster spots (`/api/v2/spots`) and solar data (`/api/v2/solar`) are fetched directly from the browser (JSON, CORS enabled)
+- **HamQTH** (`www.hamqth.com`): DXCC lookups, DX Cluster spots, solar data, RBN spots
+  - DX Cluster spots (`/api/v2/spots`), solar data (`/api/v2/solar`), and RBN spots with positions (`/api/v2/rbn?include=locations`, do not poll faster than 15 s) are fetched directly from the browser (JSON, CORS enabled)
   - If HamQTH is down, `/api/dxcc` returns `502`
 - **pico-radio-gateway**: Optional JSON API for radio frequency/mode sync
 
@@ -238,7 +241,7 @@ Old implementation in `_old/` directory:
 ## Known Limitations
 
 - `dxcc_id` in local DB may be empty, so DXCC is resolved from HamQTH, not locally
-- RBN is still a UI placeholder
+- RBN positions are 4-char grid squares only (HamQTH limits public precision); source `dxcc` = country-level only
 - Frontend uses plain React state, no form library or React Query
 - QSO list has pagination only, no client-side filters/search yet
 - Frontend is a single large component (`App.tsx`) - no component extraction yet
