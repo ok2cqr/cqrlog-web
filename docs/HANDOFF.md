@@ -216,7 +216,7 @@ Additional frontend work completed after initial handoff:
 
 - RBN view (2026-10-07), sidebar antenna icon, `frontend/src/RbnView.tsx` + `RbnMap.tsx`:
   - loads `https://www.hamqth.com/api/v2/rbn?calls=…&maxAge=…&include=locations` every 30 s (HamQTH asks for >= 15 s)
-  - callsign field defaults to Settings → Station → My callsign; any call (or comma-separated list) can be typed; HamQTH matches portable forms (`OK2CQR` also returns `OK2CQR/P`, `DL/OK2CQR`)
+  - callsign field defaults to Settings → Station → My callsign, or (when empty) to `Call` from the `[Station]` section of `cqrlog_config` via `GET /api/station`; the station `LOC` is also the position fallback when no QTH profile is selected; any call (or comma-separated list) can be typed; HamQTH matches portable forms (`OK2CQR` also returns `OK2CQR/P`, `DL/OK2CQR`)
   - Leaflet + OpenStreetMap tiles; positions from the `locations` array of the same response (4-char grid, `source` = `skimmer` / `callbook` / `dxcc`); the earlier per-call `/dxcc` lookups and their `localStorage` cache (`cqrlog.rbn.locations.v1`, now removed on load) are gone
   - own position = locator of the active QTH profile, fallback to the HamQTH position of the heard station (only when a single station is heard)
   - table: skimmer, grid (`≈` = country-level `dxcc` source), distance, SNR, freq, band/mode, heard call (only when it can differ), age; band chips filter both map and table

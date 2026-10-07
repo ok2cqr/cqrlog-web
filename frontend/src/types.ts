@@ -137,6 +137,14 @@ export type LogEntryListResponse = {
   sortDirection: string;
 };
 
+// Station data from the desktop CQRLOG configuration ([Station] section of cqrlog_config).
+export type Station = {
+  callsign: string | null;
+  name: string | null;
+  qth: string | null;
+  locator: string | null;
+};
+
 export type ProfileListResponse = {
   items: Profile[];
   totalCount: number;

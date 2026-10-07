@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Api\CallsignContext;
 
+use App\Support\CqrlogConfigReader;
 use DateTimeImmutable;
 use Dibi\Connection;
 use Dibi\Row;
@@ -12,6 +13,7 @@ final readonly class CallsignContextGateway
 {
     public function __construct(
         private Connection $connection,
+        private CqrlogConfigReader $configReader,
     ) {
     }
 
@@ -135,20 +137,8 @@ final readonly class CallsignContextGateway
             5 => 'Club 5',
         ];
 
-        $config = $this->connection->fetchSingle(
-            'SELECT config_file
-            FROM cqrlog_config
-            ORDER BY id_cqrlog__config DESC
-            LIMIT 1',
-        );
-
-        if (!is_string($config) || trim($config) === '') {
-            return $defaultNames;
-        }
-
-        $config = str_replace(["\\r\\n", "\\n", "\\r"], ["\n", "\n", "\r"], $config);
         $names = $defaultNames;
-        $clubsSection = $this->extractIniSection($config, 'Clubs');
+        $clubsSection = $this->configReader->readSection('Clubs');
 
         for ($slot = 1; $slot <= 5; $slot++) {
             $configuredName = $this->resolveClubNameForSlot($clubsSection, $slot);
@@ -159,44 +149,6 @@ final readonly class CallsignContextGateway
         }
 
         return $names;
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private function extractIniSection(string $config, string $sectionName): array
-    {
-        if (preg_match(sprintf('/^\[%s\]\R(.*?)(?=^\[|\z)/ms', preg_quote($sectionName, '/')), $config, $matches) !== 1) {
-            return [];
-        }
-
-        $values = [];
-        $lines = preg_split('/\R/', trim($matches[1])) ?: [];
-
-        foreach ($lines as $line) {
-            $trimmedLine = trim($line);
-
-            if ($trimmedLine === '' || str_starts_with($trimmedLine, ';') || str_starts_with($trimmedLine, '#')) {
-                continue;
-            }
-
-            $separatorPosition = strpos($trimmedLine, '=');
-
-            if ($separatorPosition === false) {
-                continue;
-            }
-
-            $key = trim(substr($trimmedLine, 0, $separatorPosition));
-            $value = trim(substr($trimmedLine, $separatorPosition + 1));
-
-            if ($key === '' || $value === '') {
-                continue;
-            }
-
-            $values[$key] = trim($value, " \t\n\r\0\x0B\"'");
-        }
-
-        return $values;
     }
 
     /**

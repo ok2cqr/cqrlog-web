@@ -185,6 +185,29 @@ Notes:
 - the endpoint proxies [HamQTH DXCC JSON](https://www.hamqth.com/dxcc_json.php?callsign=XX9W)
 - if the upstream service is unavailable, the API returns `502 Bad Gateway`
 
+## Station
+
+### `GET /api/station`
+
+Returns the operator station data from the desktop CQRLOG configuration (read-only).
+
+Response example:
+
+```json
+{
+  "callsign": "OK2CQR",
+  "name": "Petr",
+  "qth": "Neratovice",
+  "locator": "JO70GG"
+}
+```
+
+Notes:
+
+- values come from the `[Station]` section (`Call`, `Name`, `QTH`, `LOC`) of the INI content stored in `cqrlog_config.config_file`
+- `callsign` and `locator` are uppercased; missing or empty values are returned as `null`
+- the frontend uses it as the default callsign for the RBN view and as a fallback position when no QTH profile locator is set
+
 ## Profiles
 
 Public fields:

@@ -15,6 +15,7 @@ import {
   getLogEntries,
   getLogEntry,
   getProfiles,
+  getStation,
   getRadioState,
   getSolarData,
   login,
@@ -34,6 +35,7 @@ import type {
   LogEntryPayload,
   LogEntryResponse,
   Profile,
+  Station,
   RecentQso,
 } from './types';
 
@@ -1010,6 +1012,7 @@ export default function App() {
     data: null,
     message: 'DXCC lookup idle.',
   });
+  const [station, setStation] = useState<Station | null>(null);
   const [profiles, setProfiles] = useState<ProfileState>({
     status: 'idle',
     items: [],
@@ -1509,6 +1512,27 @@ export default function App() {
       delete document.documentElement.dataset.theme;
     };
   }, [settings.theme, systemTheme]);
+
+  useEffect(() => {
+    if (authState !== 'logged-in') {
+      return;
+    }
+
+    let cancelled = false;
+
+    // Best effort: without it the RBN view simply has no default callsign.
+    void getStation()
+      .then((response) => {
+        if (!cancelled) {
+          setStation(response);
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authState]);
 
   useEffect(() => {
     if (authState !== 'logged-in') {
@@ -4504,8 +4528,8 @@ export default function App() {
         ) : isRbnView ? (
           <RbnView
             active={pageVisible && authState === 'logged-in'}
-            defaultCallsign={settings.myCallsign}
-            homeLocator={selectedProfile?.locator ?? null}
+            defaultCallsign={settings.myCallsign || station?.callsign || ''}
+            homeLocator={selectedProfile?.locator ?? station?.locator ?? null}
           />
         ) : isClusterView ? (
           <section className="panel panel--list">
@@ -4605,7 +4629,10 @@ export default function App() {
               <section className="settings-card">
                 <div className="settings-card__header">
                   <h3 className="settings-card__title">Station</h3>
-                  <p className="settings-card__subtle">Your own callsign, used as the default in the RBN view.</p>
+                  <p className="settings-card__subtle">
+                    Your own callsign, used as the default in the RBN view.
+                    {station?.callsign ? ` Taken from the CQRLOG configuration (${station.callsign}) unless overridden here.` : ''}
+                  </p>
                 </div>
 
                 <label className="setting-row">
@@ -4618,7 +4645,7 @@ export default function App() {
                     type="text"
                     value={settings.myCallsign}
                     onChange={(event) => updateSetting('myCallsign', event.target.value.trim().toUpperCase())}
-                    placeholder="e.g. OK2CQR"
+                    placeholder={station?.callsign ?? 'e.g. OK2CQR'}
                     autoCapitalize="characters"
                     autoCorrect="off"
                     spellCheck={false}

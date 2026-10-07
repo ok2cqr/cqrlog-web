@@ -8,6 +8,7 @@ import type {
   LogEntryPayload,
   LogEntryResponse,
   ProfileListResponse,
+  Station,
 } from './types';
 
 type ApiErrorPayload = {
@@ -195,6 +196,10 @@ export function getLogEntries(
 
 export function getProfiles(): Promise<ProfileListResponse> {
   return requestJson<ProfileListResponse>('/api/profiles');
+}
+
+export function getStation(): Promise<Station> {
+  return requestJson<Station>('/api/station');
 }
 
 export function getFrontendConfig(): Promise<FrontendConfigResponse> {

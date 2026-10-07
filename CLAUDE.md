@@ -33,13 +33,14 @@ backend root (repo root):
       Note/                       # Short notes per callsign
       LongNote/                   # Long notes
       Profile/                    # Radio profiles
+      Station/                    # Read-only station data from cqrlog_config
       Exception/                  # ApiException, ValidationException, etc.
       Http/                       # JsonRequestDecoder
     Controller/
       Api/                        # One controller per resource
       ApiController.php           # Base controller with shared helpers
     EventSubscriber/              # ApiExceptionSubscriber (error formatting)
-    Support/                      # CallsignIdResolver (callsign normalization)
+    Support/                      # CallsignIdResolver (callsign normalization), CqrlogConfigReader (cqrlog_config INI sections)
   config/
     services.yaml                 # Dibi connection config (env-based)
     routes.yaml                   # Route definitions
@@ -99,6 +100,7 @@ Test files:
 - `tests/Api/LongNoteControllerTest.php`
 - `tests/Api/ProfileControllerTest.php`
 - `tests/Api/CallsignContextControllerTest.php`
+- `tests/Api/StationControllerTest.php`
 
 ## API Resources
 
@@ -117,6 +119,7 @@ Test files:
 |---|---|---|
 | `callsignContext` | local DB | Autofill helper - note, clubs, recent QSOs |
 | `dxcc` | HamQTH proxy | DXCC metadata lookup |
+| `station` | `cqrlog_config` `[Station]` | Own callsign, name, QTH, locator |
 | `frontendConfig` | env vars | Radio sync defaults |
 | `health` | internal | Health check |
 
@@ -185,7 +188,7 @@ Additional per-resource files as needed:
 - RBN view (`RbnView.tsx` + Leaflet `RbnMap.tsx`): where a callsign is heard by skimmers (HamQTH `/api/v2/rbn`, 30 s polling), map + table, band filter; station positions come in the same response (`include=locations`, 4-char grid)
 - Settings: dark mode, QTH profile, radio sync config
 - Sidebar navigation: QSO entry (+), Contest, QSO list, DX Cluster, RBN, Settings
-- Settings → Station → My callsign (default callsign for the RBN view)
+- Settings → Station → My callsign (optional override; RBN default is `/api/station` callsign from the CQRLOG config)
 
 ## External Dependencies
 

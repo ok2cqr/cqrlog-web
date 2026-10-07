@@ -80,6 +80,18 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '502':
           $ref: '#/components/responses/UpstreamError'
+  /api/station:
+    get:
+      tags: [Station]
+      summary: Operator station data from the CQRLOG configuration
+      operationId: getStation
+      responses:
+        '200':
+          description: Station data ([Station] section of cqrlog_config)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Station'
   /api/profiles:
     get:
       tags: [Profiles]
@@ -535,6 +547,27 @@ components:
             $ref: '#/components/schemas/RecentQso'
         autofill:
           $ref: '#/components/schemas/CallsignAutofill'
+    Station:
+      type: object
+      additionalProperties: false
+      required: [callsign, name, qth, locator]
+      properties:
+        callsign:
+          type: string
+          nullable: true
+          example: OK2CQR
+        name:
+          type: string
+          nullable: true
+          example: Petr
+        qth:
+          type: string
+          nullable: true
+          example: Neratovice
+        locator:
+          type: string
+          nullable: true
+          example: JO70GG
     Dxcc:
       type: object
       required: [callsign, name, details, continent, utc, waz, itu, lat, lng, adif]
