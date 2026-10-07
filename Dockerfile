@@ -12,7 +12,7 @@ RUN composer install \
     --optimize-autoloader \
     --no-scripts
 
-FROM node:20-alpine AS frontend_build
+FROM node:22-alpine AS frontend_build
 
 WORKDIR /app/frontend
 

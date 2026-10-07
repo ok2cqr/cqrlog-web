@@ -9,7 +9,7 @@ CQRLOG Web - a full-stack web application providing a REST API backend and React
 ## Stack
 
 - **Backend**: PHP 8.2+ / Symfony 7.4, Dibi 5.1.1 (database abstraction)
-- **Frontend**: React 18 + TypeScript + Vite
+- **Frontend**: React 19 + TypeScript 6 + Vite 8
 - **Database**: MariaDB 11.4 (legacy CQRLOG schema)
 - **Testing**: PHPUnit 12.5
 - **Deployment**: Docker Compose (dev and production)

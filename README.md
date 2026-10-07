@@ -17,7 +17,7 @@ OpenAI Codex and Claude.
 ### Requirements
 
 - Docker with Compose
-- Node.js 20+ and npm
+- Node.js 22+ and npm
 
 ### Start the local stack
 
